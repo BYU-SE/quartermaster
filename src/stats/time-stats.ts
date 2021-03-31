@@ -10,6 +10,10 @@ export class TimeStats {
   constructor() { }
   // public totalTime ? (this also includes add(), success(), fail())
 
+  /**
+   * Returns time stats with the appended stage name.
+   * @param stage 
+   */
   static fromStage(stage: Stage): TimeStats {
     const t = new TimeStats();
     t.stage = stage.constructor.name;

@@ -16,6 +16,10 @@ export class FIFOQueue implements Queue {
     this.setNumWorkers(numWorkers);
   }
 
+  /**
+   * Returns a promise for a worker assigned to service the event.
+   * @param event 
+   */
   async enqueue(event: Event): Promise<Worker> {
     return new Promise<Worker>((resolve, reject) => {
       const callback = (err: any, data: Worker) => {
@@ -28,16 +32,31 @@ export class FIFOQueue implements Queue {
 
     })
   }
+
+  /**
+   * Is the queue full?
+   */
   isFull(): boolean {
     return this.items.length >= this.capacity
   }
+
+  /**
+   * Is there a free worker that is not processing any events?
+   */
   hasFreeWorker(): boolean {
     return this.workers.some(w => w.event == null);
   }
+  /**
+   * Indicates whether the queue has any queued events left to process.
+   */
   hasWorkToDo(): boolean {
     return this.items.length > 0;
   }
 
+  /**
+   * Adds work to the queue.
+   * @param item 
+   */
   add(item: Item): void {
     if (this.isFull())
       throw "fail"
@@ -46,6 +65,10 @@ export class FIFOQueue implements Queue {
     this.work();
   }
 
+  /**
+   * A worker processes an event off the queue if there is an event in the queue
+   * and if there is a free worker.
+   */
   work(): void {
     if (!this.hasFreeWorker())
       return;
@@ -60,12 +83,24 @@ export class FIFOQueue implements Queue {
     nextUp.callback(null, worker);
   }
 
+  /**
+   * Returns current length of queue.
+   */
   length(): number {
     return this.items.length;
   }
+
+  /**
+   * Sets the max length of the queue.
+   * @param capacity 
+   */
   setCapacity(capacity: number): void {
     this.capacity = capacity;
   }
+  
+  /**
+   * Gets the max length of the queue.
+   */
   getCapacity(): number {
     return this.capacity;
   }
@@ -92,6 +127,10 @@ export class FIFOQueue implements Queue {
       this.workers.length = num;
     }
   }
+
+  /**
+   * Gets the number of workers.
+   */
   getNumWorkers(): number {
     return this.workers.length
   }

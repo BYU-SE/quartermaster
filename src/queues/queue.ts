@@ -15,8 +15,16 @@ export interface Queue {
    * Is the queue full?
    */
   isFull(): boolean;
-
+  
+  /**
+   * Sets the max length of the queue.
+   * @param capacity 
+   */
   setCapacity(capacity: number): void;
+
+  /**
+   * Gets the max length of the queue.
+   */
   getCapacity(): number;
 
   /**
@@ -24,11 +32,19 @@ export interface Queue {
    */
   hasFreeWorker(): Boolean
 
+  /**
+   * Sets the number of workers.
+   * @param num 
+   */
   setNumWorkers(num: number): void;
+
+  /**
+   * Gets the number of workers.
+   */
   getNumWorkers(): number;
 
   /**
-   * Attempts to process an element from the queue, if there is something in 
+   * Attempts to process an element from the queue if there is something in 
    * the queue and if there is a free worker.
    */
   work(): void;

@@ -13,6 +13,10 @@ export class Event {
   public responseTime: ResponseStats = new ResponseStats();
   constructor(public key: string) { }
 
+  /**
+   * Stores time spent spent in a stage.
+   * @param t (time)
+   */
   addStageTime(t: TimeStats): void {
     this.stageTimes.push(t);
   }

@@ -30,6 +30,12 @@ class Metronome {
     return this._currentTick;
   }
 
+  /**
+   * Begins the metronome, ends when ticks totaling ticksToExecute are run or when 
+   * keepAlive duration has been spent.
+   * 
+   * @param ticksToExecute 
+   */
   async start(ticksToExecute: number = Infinity): Promise<void> {
     const id = Math.floor(Math.random() * 9999);
     this._keepAlive = setInterval(() => {
@@ -53,6 +59,9 @@ class Metronome {
     });
   }
 
+  /**
+   * Iterate over a millisecond in the simulation according to callback constraints.
+   */
   async tick(): Promise<void> {
     await this.sleep();
     for (let i = 0; i < this._callbacks.length; i++) {
@@ -67,7 +76,9 @@ class Metronome {
     this._currentTick++;
   }
 
-  // halt until resolved
+  /**
+   * Halt until resolved.
+   */
   private async sleep() {
     // In Node 14- promise rejections are handled nextTick. The simulation
     // usually generates thousands of unhandled promises, which will cause
@@ -83,6 +94,9 @@ class Metronome {
     }
   }
 
+  /**
+   * If there is work to do, resume work.
+   */
   private awake() {
     // don't awake if the metronome has not been started yet
     if (!this._keepAlive) {
@@ -96,6 +110,11 @@ class Metronome {
     }
   }
 
+  /**
+   * Executes a passed function and ends it once the given number of ticks have passed.
+   * @param callback 
+   * @param ticks 
+   */
   setTimeout(callback: Function, ticks: number) {
     ticks = Math.max(1, Math.floor(ticks));
     this._callbacks.push({
@@ -105,6 +124,11 @@ class Metronome {
     this.awake();
   }
 
+  /**
+   * Repeatedly executes a passed function each time a period of 'ticks' has passed.
+   * @param callback 
+   * @param ticks 
+   */
   setInterval(callback: Function, ticks: number) {
     this.setTimeout(() => {
       callback();
@@ -113,6 +137,10 @@ class Metronome {
     }, ticks);
   }
 
+  /**
+   * Terminates the metronome counter functions and methods running on it.
+   * @param clear 
+   */
   async stop(clear: Boolean = true): Promise<void> {
     // remove callbacks that haven't been reached
     if (clear)
@@ -141,6 +169,10 @@ class Metronome {
     await waitRealTime(1);
   }
 
+  /**
+   * Helper function for awaiting an empty promise returned after 'ticks' have passed.
+   * @param ticks 
+   */
   wait(ticks: number): Promise<void> {
     if (!Number.isInteger(ticks)) {
       console.log(`Warning: Calling metronome.wait with a non-integer will result in rounding. \n\t metronome.wait(${ticks}) will be rounded down to metronome.wait(${Math.floor(ticks)})`)
@@ -149,10 +181,17 @@ class Metronome {
     return new Promise((resolve) => this.setTimeout(function _wait() { resolve() }, ticks));
   }
 
+  /**
+   * Resets metronome clock to 0.
+   */
   resetCurrentTime(): void {
     this._currentTick = 0;
   }
 
+  /**
+   * A helper function for debugging that runs when the process fails to terminate. 
+   * @param detail 
+   */
   debug(detail: boolean = false): void {
     console.log("Metronome Debug".green.bold);
     console.log("Keep-Alive:", this._keepAlive ? "running".green : "stopped".yellow)
@@ -165,6 +204,10 @@ class Metronome {
 
 }
 
+/**
+ * Helper function for waiting until after 'ms' ticks have passed.
+ * @param ms (milliseconds)
+ */
 function waitRealTime(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }

@@ -10,6 +10,13 @@ type Series = any[]
 class Stats {
   private table: Table = {};
   private timeSeries: SeriesTable = {};
+
+  /**
+   * Adds a value to the value in a name-value pair in a table. Creates a 
+   * name-value pair and adds it to the table if it does not already exist.
+   * @param name 
+   * @param value 
+   */
   add(name: string, value: number) {
     if (!this.table[name]) {
       this.table[name] = { value: 0, called: 0, type: "add" };
@@ -20,6 +27,13 @@ class Stats {
     existing.called++;
   }
 
+  /**
+   * Sets the value in a name-value pair to the higher number between the passed value
+   * and the value in the table. Creates a name-value pair and adds it to the table 
+   * if it does not already exist.
+   * @param name 
+   * @param value 
+   */
   max(name: string, value: number) {
     if (!this.table[name]) {
       this.table[name] = { value: 0, called: 0, type: "max" };
@@ -30,9 +44,18 @@ class Stats {
     existing.called++;
   }
 
+  /**
+   * Gets the value associated with the name
+   * @param name 
+   */
   get(name: string): number {
     return this.table[name]?.value || 0;
   }
+
+  /**
+   * Gets the time the name-value pair was recorded.
+   * @param name 
+   */
   getRecorded(name: string): any[] {
     return this.timeSeries[name] || [];
   }
@@ -45,6 +68,11 @@ class Stats {
     this.timeSeries = {};
   }
 
+  /**
+   * Records a name and value pair in the stats table.
+   * @param name 
+   * @param values 
+   */
   record(name: string, values: any) {
     if (!this.timeSeries[name]) {
       this.timeSeries[name] = [];
@@ -54,6 +82,12 @@ class Stats {
     existing.push(values);
   }
 
+  /**
+   * Prints the values in each recorded item in the global stats table
+   * along with a time index and the event rate at that index. Prints 
+   * the first 31 values by default. 
+   * @param extended 
+   */
   summary(extended: boolean = false): void {
     const virtual: Table = JSON.parse(JSON.stringify(this.table))
 

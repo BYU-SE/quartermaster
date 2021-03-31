@@ -24,7 +24,9 @@ class Simulation {
   private _eventsSent: number = 0;
   private _running: boolean = false;
 
-
+  /**
+   * sets arrival rate of events into simulation and events sent total to 0.
+   */
   reset() {
     this._arrivalRate = 0;
     this._eventsSent = 0;
@@ -101,7 +103,11 @@ class Simulation {
     return events;
   }
 
-
+  /**
+   * A helper method that creates new events and instantiates each with a unique key, 
+   * start time, and end time.
+   * @param stage 
+   */
   private createEvent(stage: Stage): Promise<Event> {
     const key = "e-" + normal(this.keyspaceMean, this.keyspaceStd);
     const event = new Event(key);
@@ -147,7 +153,8 @@ export const simulation = new Simulation();
  * 2. % success
  * 3. % latencies
  * 4. % slow failures? (interesting?)
- * @param events The events that have completed the simulation
+ * @param events (The events that have completed the simulation)
+ * @param additionalColumns
  */
 export function eventSummary(events: Event[], additionalColumns?: EventSummaryColumn[]): void {
   const summary = createEventSummary(events, additionalColumns);
@@ -170,6 +177,13 @@ type EventSummaryColumn = {
   name: string;
   func: EventSummaryColumnFunction;
 }
+/**
+ * Returns a table of default event information, including type (success or fail), 
+ * count, percent (of total count), mean latency, and standard deviation latency. 
+ * Also prints additional information if requested.
+ * @param events 
+ * @param additionalColumns (can be left empty or filled in function call)
+ */
 function createEventSummary(events: Event[], additionalColumns?: EventSummaryColumn[]): EventSummary {
   const success: Event[] = [];
   const fail: Event[] = [];
@@ -218,9 +232,10 @@ function createEventSummary(events: Event[], additionalColumns?: EventSummaryCol
 
 /**
  * Print a need summary to the console describing events' behavior within a
- * stage; specifically traffic and timing summaries.
+ * stage or stages; specifically traffic and timing summaries.
  * 
- * @param stages A stage or an array of stages to report stats about
+ * @param stages (A stage or an array of stages to report stats about)
+ * @param additionalColumns (can be left empty or filled in function call)
  */
 export function stageSummary(stages: Stage | Stage[], additionalColumns?: StageSummaryColumn[]): void {
   const arr = Array.isArray(stages) ? stages : [stages];
@@ -244,6 +259,11 @@ type StageSummaryColumn = {
   name: string;
   func: StageSummaryColumnFunction;
 }
+/**
+ * Returns stage information as headers of a table.
+ * @param stages 
+ * @param additionalColumns 
+ */
 function createStageSummary(stages: Stage[], additionalColumns: StageSummaryColumn[] = []): StageSummary {
   return stages.map(s => ({
     stage: s.time.stage,
@@ -264,7 +284,11 @@ function createStageSummary(stages: Stage[], additionalColumns: StageSummaryColu
 
 
 
-
+/**
+ * Prints the difference between the attributes of two event arrays' summaries.
+ * @param a 
+ * @param b 
+ */
 export function eventCompare(a: Event[], b: Event[]): void {
   const aSummary = createEventSummary(a);
   const bSummary = createEventSummary(b);
