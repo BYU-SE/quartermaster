@@ -14,7 +14,13 @@ export class LRUCache extends Cache {
 
   public get(key: string): any {
     this.prune();
-    return super.get(key);
+    const value = super.get(key);
+    if (value) {
+      // update order
+      this.order = this.order.filter(x => x != key);
+      this.order.push(key);
+    }
+    return value;
   }
 
   public set(key: string, value: any): void {
@@ -29,14 +35,6 @@ export class LRUCache extends Cache {
   }
 
   /**
-   * Removes all entries from the cache.
-   */
-  public clear(): void {
-    super.clear();
-    this.order = [];
-  }
-
-  /**
    * Checks if a line item is older than the ttl
    * @param lineItem The line item to check
    */
@@ -48,24 +46,20 @@ export class LRUCache extends Cache {
    * Evict items that are expired (always) or lru (when over capacity)
    */
   protected prune(): void {
-    // expired keys first. Since order has oldest stuff at beginning, loop
-    // until first non-stale key, delete up to this point
-    let indexToRemoveUpTo = 0;
+    // remove expired items first
     for (let i = 0; i < this.order.length; i++) {
       const key = this.order[i];
-      if (this.isExpired(this._cache[key]))
-        indexToRemoveUpTo = i;
-      else
-        break;
+      if (this.isExpired(this._cache[key])) {
+        this.remove(key);
+        this.order.splice(i, 1);
+        i--;
+      }
     }
-
-    const keysToDelete = this.order.splice(0, indexToRemoveUpTo);
-    keysToDelete.forEach(key => this.remove(key));
 
     // then look for lru
     while (this.order.length > this.capacity) {
       const keyToRemove = this.order.shift() as string;
-      delete this._cache[keyToRemove];
+      this.remove(keyToRemove)
     }
   }
 }

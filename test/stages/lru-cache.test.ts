@@ -1,23 +1,4 @@
-import { Event, metronome, LRUCache, AvailableDependency } from "../../src";
-
-
-
-
-async function createCache(): Promise<LRUCache> {
-  const dependency = new AvailableDependency();
-  dependency.availability = 1;
-
-  const cache = new LRUCache(dependency);
-  cache.capacity = 4;
-  cache.ttl = 10;
-
-  await cache.accept(new Event("hit-1"));
-  await metronome.wait(1);
-  await cache.accept(new Event("hit-2"));
-  await metronome.wait(1);
-  await cache.accept(new Event("hit-3"));
-  return cache;
-}
+import { metronome, LRUCache, AvailableDependency } from "../../src";
 
 
 describe('LRUCache', () => {
@@ -25,50 +6,60 @@ describe('LRUCache', () => {
 
   beforeEach(async () => {
     metronome.resetCurrentTime();
-    metronome.start();
-    cache = await createCache();
-  })
-  afterEach(() => {
-    metronome.stop(true);
+    cache = new LRUCache(new AvailableDependency());
+    cache.ttl = 10;
+    cache.capacity = 4;
   })
 
+  describe('evicts', () => {
+    test('few items past the ttl', async () => {
+      cache.set("expired", { time: -100 });
+      cache.set("expired2", { time: -100 });
+      const store = cache.getStore();
+      expect(Object.keys(store)).toStrictEqual([]);
+    })
+    test('many items past the ttl', async () => {
+      cache.set("expired", { time: -50 });
+      cache.set("expired2", { time: -20 });
+      cache.set("almost", { time: -10 });
+      cache.set("not", { time: -2 });
+      cache.set("impossible", { time: 2 });
+
+      const store = cache.getStore();
+      expect(Object.keys(store)).toStrictEqual(["almost", "not", "impossible"]);
+    })
+    test('the oldest inserted', async () => {
+      cache.set("1", { time: 0 });
+      cache.set("2", { time: 0 });
+      cache.set("3", { time: 0 });
+      cache.set("4", { time: 0 });
+      cache.set("5", { time: 0 });
+
+      const store = cache.getStore();
+      expect(Object.keys(store).sort()).toStrictEqual(["2", "3", "4", "5"]);
+    })
+    test('the least recently used', async () => {
+      cache.set("1", { time: 0 });
+      cache.set("2", { time: 0 });
+      cache.set("3", { time: 0 });
+      cache.set("4", { time: 0 });
+      cache.get("1");
+      cache.set("5", { time: 0 });
+
+      const store = cache.getStore();
+      expect(Object.keys(store).sort()).toStrictEqual(["1", "3", "4", "5"]);
+    })
+  });
+
   test('has a fixed capacity', async () => {
-    await cache.accept(new Event("hit-4"));
-    await cache.accept(new Event("hit-5"));
+    cache.set("1", { time: 0 });
+    cache.set("2", { time: 0 });
+    cache.set("3", { time: 0 });
+    cache.set("4", { time: 0 });
+    cache.set("5", { time: 0 });
 
     const store = cache.getStore();
     const size = Object.keys(store).length;
     expect(size).toBe(cache.capacity);
   })
-
-  test('evicts the oldest inserted objects first', async () => {
-    await metronome.wait(1);
-    await cache.accept(new Event("hit-4"));
-    await metronome.wait(1);
-    await cache.accept(new Event("hit-5"));
-
-    const store = cache.getStore();
-    const size = Object.keys(store);
-    expect(Object.keys(store)).toStrictEqual(["hit-2", "hit-3", "hit-4", "hit-5",]);
-  })
-  test('evicts the least-recently-used', async () => {
-    await metronome.wait(1);
-    await cache.accept(new Event("hit-4"));
-    await metronome.wait(1);
-    await cache.accept(new Event("hit-5"));
-    await metronome.wait(1);
-    await cache.accept(new Event("hit-1"));
-
-    const store = cache.getStore();
-    const size = Object.keys(store);
-    expect(Object.keys(store)).toStrictEqual(["hit-3", "hit-4", "hit-5", "hit-1"]);
-  })
-  test('evicts items past the ttl', async () => {
-    await metronome.wait(9);
-
-    const store = cache.getStore();
-    const size = Object.keys(store);
-    expect(Object.keys(store)).toStrictEqual(["hit-2", "hit-3"]);
-  })
 })
-

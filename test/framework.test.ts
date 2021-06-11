@@ -14,6 +14,7 @@ describe('Framework', () => {
     stage = new SuccessStage();
     stageWorkSpy = jest.spyOn(stage, 'workOn');
 
+    metronome.realSleepTime = 0;
     simulation.eventsPer1000Ticks = 200;
   })
 
