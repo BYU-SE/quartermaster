@@ -15,7 +15,18 @@ class Metronome {
 
   private _stopResolve: Function | null;
 
+  /**
+   * How long the metronome will occasionally sleep. Can be configured to any
+   * positive number including 0 if you don't want to sleep ever. This helps
+   * adjust for some garbage collection necessary for rejected promises.
+   */
   public realSleepTime: number = 1;
+
+  /**
+   * The number of ticks between real sleeps. Can be configured to any positive
+   * number excluding 0.
+   */
+  public realSleepFrequency: number = 1;
 
   /**
    * Fast-forward in time until some work needs to be done. This is useful
@@ -92,7 +103,7 @@ class Metronome {
     // a long delay after the simulation. We need to wait real time for a
     // bit just to be sure we can handle rejections.
     // https://github.com/nodejs/node/issues/34851
-    if (this.realSleepTime > 0)
+    if (this.realSleepTime > 0 && this._currentTick % this.realSleepFrequency == 0)
       await waitRealTime(this.realSleepTime);
 
     if (this._callbacks.length == 0) {
