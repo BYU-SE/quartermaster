@@ -26,7 +26,7 @@ class Metronome {
    * The number of ticks between real sleeps. Can be configured to any positive
    * number excluding 0.
    */
-  public realSleepFrequency: number = 1;
+  public realSleepFrequency: number = 100000;
 
   /**
    * Fast-forward in time until some work needs to be done. This is useful
