@@ -49,13 +49,10 @@ export abstract class Stage {
     time.queueTime = metronome.now() - t;
     this.time.queueTime += time.queueTime;
 
+    const beforeWorkTime = metronome.now();
     try {
       this.traffic.workOn++;
-      const t = metronome.now();
       await this.workOn(event);
-      time.workTime = metronome.now() - t;
-      this.time.workTime += time.workTime;
-
       this.traffic.success++;
       return this.success(event);
     } catch (err) {
@@ -68,6 +65,9 @@ export abstract class Stage {
       this.traffic.fail++;
       return this.fail(event);
     } finally {
+      time.workTime = metronome.now() - beforeWorkTime;
+      this.time.workTime += time.workTime;
+
       worker.free();
     }
   }
