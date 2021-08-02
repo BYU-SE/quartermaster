@@ -193,6 +193,10 @@ class Metronome {
     console.log("Current Tick:", this.now())
   }
 
+  isRunning(): boolean {
+    return !!this._keepAlive
+  }
+
 }
 
 function waitRealTime(ms: number) {
