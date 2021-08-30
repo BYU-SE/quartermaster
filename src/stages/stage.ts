@@ -7,6 +7,7 @@ import {
   TrafficStats,
   metronome
 } from "../";
+import { ServiceQueue } from "../queues";
 
 /**
  * The primary unit of a fault tolerant technique.
@@ -21,7 +22,7 @@ import {
  * easier to override.
  */
 export abstract class Stage {
-  public inQueue: Queue = new NoQueue();
+  public inQueue: Queue | ServiceQueue = new NoQueue();
   public time: TimeStats;
   public traffic: TrafficStats;
   constructor() {

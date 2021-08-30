@@ -15,7 +15,11 @@ export async function testSequence(queue: Queue, events: KeyTime[], order: { key
 
   events.forEach(keyTime => {
     const e = new Event(keyTime.key);
-    const finished = queue.enqueue(e).then(doSomeWork(keyTime.time, e, completion));
+    const finished = queue.enqueue(e)
+      .then(doSomeWork(keyTime.time, e, completion))
+      .catch(e => {
+        throw `Could not insert key ${keyTime.key} for reason ${e}` 
+      });
     promises.push(finished);
   });
 

@@ -24,6 +24,8 @@ class Simulation {
   private _eventsSent: number = 0;
   private _running: boolean = false;
 
+  public debug:boolean = false;
+
 
   reset() {
     this._arrivalRate = 0;
@@ -56,9 +58,21 @@ class Simulation {
     metronome.start();
 
     this._running = true;
+    if(this.debug)
+      console.log("sending events");
     const pendingEvents = await this.sendEvents(stage, numEventsToSend)
+    if(this.debug)
+      console.log("events sent, waiting for events to settle");
+    
     const events = await Promise.all(pendingEvents);
+
+    if(this.debug)
+      console.log("events settled, stopping metronome");
     await metronome.stop(true);
+
+    if(this.debug)
+      console.log("metronome stopped");
+
     this._running = false;
     return events;
   }
@@ -90,6 +104,10 @@ class Simulation {
         if (this._eventsSent >= numEventsToSend) {
           break outer;
         }
+      }
+
+      if(this.debug){
+        console.log("framework loop", this._eventsSent, "/", numEventsToSend);
       }
 
       //go to next tick

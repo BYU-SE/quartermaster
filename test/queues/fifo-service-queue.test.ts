@@ -1,9 +1,9 @@
-import { Event, metronome, FIFOQueue } from "../../src";
+import { Event, metronome, FIFOServiceQueue } from "../../src";
 import { testSequence } from "./util";
 
 
-describe('FIFOQueue', () => {
-  let queue: FIFOQueue;
+describe('FIFOServiceQueue', () => {
+  let queue: FIFOServiceQueue;
 
   afterEach(() => {
     metronome.stop(true);
@@ -11,7 +11,7 @@ describe('FIFOQueue', () => {
 
   describe('typical', () => {
     beforeEach(() => {
-      queue = new FIFOQueue(3, 1);
+      queue = new FIFOServiceQueue(3, 1);
       metronome.resetCurrentTime();
       metronome.start();
     })
@@ -78,9 +78,9 @@ describe('FIFOQueue', () => {
     })
   });
 
-  describe('0-length, 1-pool', () => {
+  describe('0-queue, 1-worker', () => {
     beforeEach(() => {
-      queue = new FIFOQueue(0, 1);
+      queue = new FIFOServiceQueue(0, 1);
       metronome.resetCurrentTime();
       metronome.start();
     })
@@ -90,6 +90,16 @@ describe('FIFOQueue', () => {
       const worker = await queue.enqueue(event);
       expect(worker).toBeDefined;
       expect(metronome.now() - time).toBe(0);
+    })
+    test('rejects a second', async () => {
+      expect.assertions(1);
+      const event = new Event("a");
+      const worker = await queue.enqueue(event);
+
+      // worker2 should get a fail since no workers available and can't queue
+      const worker2 = await queue.enqueue(event).catch(e => {
+        expect(e).toBe("fail")
+      });
     })
   });
 })
