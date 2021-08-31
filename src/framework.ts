@@ -19,12 +19,11 @@ class Simulation {
    */
   keyspaceStd: number = 50;
 
-
   private _arrivalRate: number = 0;
   private _eventsSent: number = 0;
   private _running: boolean = false;
 
-  public debug:boolean = false;
+  public debug: boolean = false;
 
 
   reset() {
@@ -58,19 +57,19 @@ class Simulation {
     metronome.start();
 
     this._running = true;
-    if(this.debug)
+    if (this.debug)
       console.log("sending events");
     const pendingEvents = await this.sendEvents(stage, numEventsToSend)
-    if(this.debug)
+    if (this.debug)
       console.log("events sent, waiting for events to settle");
-    
+
     const events = await Promise.all(pendingEvents);
 
-    if(this.debug)
+    if (this.debug)
       console.log("events settled, stopping metronome");
     await metronome.stop(true);
 
-    if(this.debug)
+    if (this.debug)
       console.log("metronome stopped");
 
     this._running = false;
@@ -106,7 +105,7 @@ class Simulation {
         }
       }
 
-      if(this.debug){
+      if (this.debug) {
         console.log("framework loop", this._eventsSent, "/", numEventsToSend);
       }
 
