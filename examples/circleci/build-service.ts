@@ -1,9 +1,9 @@
-import { Stage, FIFOQueue, Event, metronome, normal, stats } from "../../src";
+import { Stage, FIFOServiceQueue, Event, metronome, normal, stats } from "../../src";
 
 export class BuildService extends Stage {
   constructor(protected wrapped: Stage) {
     super();
-    this.inQueue = new FIFOQueue(Infinity, 220);
+    this.inQueue = new FIFOServiceQueue(Infinity, 220);
   }
 
 
@@ -20,7 +20,7 @@ export class BuildService extends Stage {
 
   async workOn(event: Event): Promise<void> {
 
-    stats.max("max-queue-size", (this.inQueue as FIFOQueue).length());
+    stats.max("max-queue-size", this.inQueue.length());
     // do some work
     const latency = normal(8, 2);
     await metronome.wait(latency);

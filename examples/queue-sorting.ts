@@ -1,4 +1,4 @@
-import { TimedDependency, stageSummary, simulation, eventSummary, LIFOQueue } from "../src";
+import { TimedDependency, stageSummary, simulation, eventSummary, FIFOServiceQueue } from "../src";
 
 
 /**
@@ -17,7 +17,9 @@ import { TimedDependency, stageSummary, simulation, eventSummary, LIFOQueue } fr
  */
 
 const live = new TimedDependency();
-live.inQueue = new LIFOQueue(10, 4);
+
+// any queue type can be used here, including one that sorts differently
+live.inQueue = new FIFOServiceQueue(10, 4);
 live.availability = 1;
 live.mean = 150;
 live.std = 20;

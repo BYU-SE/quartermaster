@@ -1,4 +1,4 @@
-import { Stage, FIFOQueue, Event, metronome, normal, exponential } from "../../src";
+import { Stage, FIFOServiceQueue, Event, metronome, normal, exponential } from "../../src";
 export class Database extends Stage {
   public concurrent: number = 0;
   public latencyA = 0.06;
@@ -10,7 +10,7 @@ export class Database extends Stage {
 
   constructor() {
     super();
-    this.inQueue = new FIFOQueue(1, 300);
+    this.inQueue = new FIFOServiceQueue(0, 300);
   }
 
   async workOn(event: Event): Promise<void> {
