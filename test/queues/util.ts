@@ -1,4 +1,4 @@
-import { Queue, Event, Worker, metronome } from "../../src";
+import { ServiceQueue, Event, Worker, metronome } from "../../src";
 
 export function doSomeWork(time: number, event: Event, completion: KeyTime[]): (worker: Worker) => Promise<void> {
   return async (worker: Worker) => {
@@ -9,7 +9,7 @@ export function doSomeWork(time: number, event: Event, completion: KeyTime[]): (
 }
 
 type KeyTime = { key: string, time: number }
-export async function testSequence(queue: Queue, events: KeyTime[], order: { key: string, time?: number }[]) {
+export async function testSequence(queue: ServiceQueue, events: KeyTime[], order: { key: string, time?: number }[]) {
   const completion: KeyTime[] = [];
   const promises: any[] = [];
 
@@ -17,8 +17,8 @@ export async function testSequence(queue: Queue, events: KeyTime[], order: { key
     const e = new Event(keyTime.key);
     const finished = queue.enqueue(e)
       .then(doSomeWork(keyTime.time, e, completion))
-      .catch(e => {
-        throw `Could not insert key ${keyTime.key} for reason ${e}` 
+      .catch((e: any) => {
+        throw `Could not insert key ${keyTime.key} for reason ${e}`
       });
     promises.push(finished);
   });
