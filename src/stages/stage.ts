@@ -1,8 +1,7 @@
 import {
   Event,
   Response,
-  Queue,
-  NoQueue,
+  NoServiceQueue,
   TimeStats,
   TrafficStats,
   metronome
@@ -22,7 +21,7 @@ import { ServiceQueue } from "../queues";
  * easier to override.
  */
 export abstract class Stage {
-  public inQueue: Queue | ServiceQueue = new NoQueue();
+  public inQueue: ServiceQueue = new NoServiceQueue();
   public time: TimeStats;
   public traffic: TrafficStats;
   constructor() {
