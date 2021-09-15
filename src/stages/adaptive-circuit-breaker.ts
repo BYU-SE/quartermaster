@@ -1,4 +1,4 @@
-import { Event, Queue, stats } from "../";
+import { Event, ServiceQueue, stats } from "../";
 import { CircuitBreaker } from "./circuit-breaker";
 import { Stage } from "./stage";
 /**
@@ -15,7 +15,7 @@ export class AdaptiveCircuitBreaker extends CircuitBreaker {
   public timeInOpenState: number = 0;
 
 
-  private _queue: Queue | null = null;
+  private _queue: ServiceQueue | null = null;
   private _queueMax: number = 0;
   private _scale: number = 1;
 
@@ -53,7 +53,7 @@ export class AdaptiveCircuitBreaker extends CircuitBreaker {
     }
   }
 
-  public setQueueToAlterNumWorkers(queue: Queue) {
+  public setQueueToAlterNumWorkers(queue: ServiceQueue) {
     this._queueMax = queue.getNumWorkers();
     this._scale = 1;
     this._queue = queue;
