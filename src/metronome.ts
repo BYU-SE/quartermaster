@@ -3,8 +3,6 @@ type DelayedCall = {
   callback: Function;
 };
 
-import "colors";
-
 class Metronome {
   // don't do work when there is nothing to do
   _sleepResolve: Function | null;
@@ -16,6 +14,26 @@ class Metronome {
   _currentTick: number;
 
   private _stopResolve: Function | null;
+
+  /**
+   * How long the metronome will occasionally sleep. Can be configured to any
+   * positive number including 0 if you don't want to sleep ever. This helps
+   * adjust for some garbage collection necessary for rejected promises.
+   */
+  public realSleepTime: number = 1;
+
+  /**
+   * The number of ticks between real sleeps. Can be configured to any positive
+   * number excluding 0.
+   */
+  public realSleepFrequency: number = 100000;
+
+  /**
+   * Fast-forward in time until some work needs to be done. This is useful
+   * for simulations with "low-density" - the overall amount of work is 
+   * spread out sufficiently in time.
+   */
+  public speedMode: boolean = false;
 
   constructor() {
     this._keepAlive = null;
@@ -31,7 +49,7 @@ class Metronome {
   }
 
   async start(ticksToExecute: number = Infinity): Promise<void> {
-    const id = Math.floor(Math.random() * 9999);
+
     this._keepAlive = setInterval(() => {
       console.log("timer keep-alive");
       if (this.now() == this._keepAliveLastTick) {
@@ -65,6 +83,17 @@ class Metronome {
     }
 
     this._currentTick++;
+
+    if (this.speedMode) {
+      // fast forward into next available work
+      if (this._callbacks.length > 0) {
+        const first = this._callbacks.map(x => x.tickToExecute).sort((a, b) => a - b)[0];
+        const delta = first - this._currentTick;
+        if (delta > 0) {
+          this._currentTick += delta;
+        }
+      }
+    }
   }
 
   // halt until resolved
@@ -74,7 +103,8 @@ class Metronome {
     // a long delay after the simulation. We need to wait real time for a
     // bit just to be sure we can handle rejections.
     // https://github.com/nodejs/node/issues/34851
-    waitRealTime(1);
+    if (this.realSleepTime > 0 && this._currentTick % this.realSleepFrequency == 0)
+      await waitRealTime(this.realSleepTime);
 
     if (this._callbacks.length == 0) {
       await new Promise((resolve) => {
@@ -154,13 +184,17 @@ class Metronome {
   }
 
   debug(detail: boolean = false): void {
-    console.log("Metronome Debug".green.bold);
-    console.log("Keep-Alive:", this._keepAlive ? "running".green : "stopped".yellow)
+    console.log("Metronome Debug");
+    console.log("Keep-Alive:", this._keepAlive ? "running" : "stopped")
     console.log("Tasks Scheduled:", this._callbacks.length)
     if (detail) {
       this._callbacks.forEach(x => console.log(`\tTask scheduled for tick ${x.tickToExecute}:`, x.callback.toString()))
     }
     console.log("Current Tick:", this.now())
+  }
+
+  isRunning(): boolean {
+    return !!this._keepAlive
   }
 
 }

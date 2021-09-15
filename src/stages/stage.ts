@@ -1,12 +1,12 @@
 import {
   Event,
   Response,
-  Queue,
-  NoQueue,
+  NoServiceQueue,
   TimeStats,
   TrafficStats,
   metronome
 } from "../";
+import { ServiceQueue } from "../queues";
 
 /**
  * The primary unit of a fault tolerant technique.
@@ -21,7 +21,7 @@ import {
  * easier to override.
  */
 export abstract class Stage {
-  public inQueue: Queue = new NoQueue();
+  public inQueue: ServiceQueue = new NoServiceQueue();
   public time: TimeStats;
   public traffic: TrafficStats;
   constructor() {
@@ -49,13 +49,10 @@ export abstract class Stage {
     time.queueTime = metronome.now() - t;
     this.time.queueTime += time.queueTime;
 
+    const beforeWorkTime = metronome.now();
     try {
       this.traffic.workOn++;
-      const t = metronome.now();
       await this.workOn(event);
-      time.workTime = metronome.now() - t;
-      this.time.workTime += time.workTime;
-
       this.traffic.success++;
       return this.success(event);
     } catch (err) {
@@ -68,6 +65,9 @@ export abstract class Stage {
       this.traffic.fail++;
       return this.fail(event);
     } finally {
+      time.workTime = metronome.now() - beforeWorkTime;
+      this.time.workTime += time.workTime;
+
       worker.free();
     }
   }

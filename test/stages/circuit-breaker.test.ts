@@ -35,6 +35,7 @@ describe('Circuit-breaker', () => {
 
     metronome.resetCurrentTime();
     metronome.start();
+    metronome.realSleepTime = 0;
   })
   afterEach(() => {
     metronome.stop(true);

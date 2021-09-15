@@ -1,5 +1,5 @@
 import { Event } from "../";
-import { Queue } from "./queue";
+import { ServiceQueue } from "./";
 
 /**
  * A worker of the pool, which processes the individual events. A worker
@@ -8,7 +8,7 @@ import { Queue } from "./queue";
  */
 export class Worker {
   public event: Event | null = null;
-  constructor(private queue: Queue | null) { }
+  constructor(private queue: ServiceQueue | null) { }
 
   /**
    * Unlocks the worker to be freed, so it can process another event on the

@@ -19,10 +19,11 @@ class Simulation {
    */
   keyspaceStd: number = 50;
 
-
   private _arrivalRate: number = 0;
   private _eventsSent: number = 0;
   private _running: boolean = false;
+
+  public debug: boolean = false;
 
 
   reset() {
@@ -56,11 +57,106 @@ class Simulation {
     metronome.start();
 
     this._running = true;
+    if (this.debug)
+      console.log("sending events");
     const pendingEvents = await this.sendEvents(stage, numEventsToSend)
+    if (this.debug)
+      console.log("events sent, waiting for events to settle");
+
     const events = await Promise.all(pendingEvents);
+
+    if (this.debug)
+      console.log("events settled, stopping metronome");
     await metronome.stop(true);
+
+    if (this.debug)
+      console.log("metronome stopped");
+
     this._running = false;
     return events;
+  }
+
+  /**
+   * Execute a simulation for a specific number of ticks
+   * 
+   * @todo Increase test coverage
+   * 
+   * @param stage The stage where events will be inserted
+   * @param numEventsToSend The number of events to be sent
+   */
+  async runForNumTicks(stage: Stage, numTicksToRun: number): Promise<Event[]> {
+    console.warn("simulation.runForNumTicks() is in testing. It may not be functional and its contract is not stable.")
+
+    if (this._running) {
+      throw "another simulation is already running";
+    }
+
+    //early exit when no events to send
+    if (numTicksToRun == 0) {
+      return [];
+    }
+
+    // clear global state (ouch)
+    this.reset();
+    stats.reset();
+    metronome.start();
+
+
+    this._arrivalRate = 0;
+    this._running = true;
+    if (this.debug)
+      console.log("sending events");
+
+
+    const pendingEvents: Promise<Event>[] = [];
+    this._eventsSent = 0;
+
+    let time = 0;
+    let virtualTime = 0;
+    outer: while (true) {
+      this._arrivalRate = this.eventsPer1000Ticks;
+      const delta = 1000 / this.eventsPer1000Ticks;
+      // delta might be 2 ticks between events for    500 eps
+      // delta might be 1.43 ticks between events for 700 eps
+      // delta might be 1 ticks between events for   1000 eps
+      // delta might be 0.5 ticks between events for 2000 eps
+
+      while (virtualTime <= time) {
+        virtualTime += delta;
+        pendingEvents.push(this.createEvent(stage));
+        this._eventsSent++;
+      }
+
+      if (this.debug) {
+        console.log("framework loop", this._eventsSent, "/", Number.POSITIVE_INFINITY);
+      }
+
+      time++;
+      if (time >= numTicksToRun) {
+        break;
+      }
+
+      //go to next tick
+      await metronome.wait(1);
+    }
+
+    if (this.debug)
+      console.log("completed ticks, stopping metronome");
+    await metronome.stop(true);
+
+    if (this.debug)
+      console.log("metronome stopped");
+
+    this._running = false;
+    this._arrivalRate = 0;
+
+    // only return the completed events.
+    const completedEvents: Event[] = [];
+    pendingEvents.forEach(p => p.then(e => {
+      completedEvents.push(e);
+    }))
+
+    return completedEvents;
   }
 
   /**
@@ -90,6 +186,10 @@ class Simulation {
         if (this._eventsSent >= numEventsToSend) {
           break outer;
         }
+      }
+
+      if (this.debug) {
+        console.log("framework loop", this._eventsSent, "/", numEventsToSend);
       }
 
       //go to next tick

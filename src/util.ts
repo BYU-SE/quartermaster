@@ -1,4 +1,14 @@
 /**
+ * Exposing critical properties to allow determinism in the framework.
+ * 
+ * The random function to use. Defaults to Math.random().
+ * Can be set if a deterministic (seedable) random is needed.
+ */
+export const MathFunctions: { random: () => number } = {
+  random: Math.random
+}
+
+/**
  * The normal distribution, using a mean and standard deviation
  * @param mean 
  * @param std 
@@ -13,9 +23,9 @@ export function standardNormal(): number {
   let u: number = 0;
   let v: number = 0;
   while (u == 0)
-    u = Math.random();
+    u = MathFunctions.random();
   while (v == 0)
-    v = Math.random();
+    v = MathFunctions.random();
   const value = Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
   if (isNaN(value)) {
     console.error("NAN achieved with values", u, v)

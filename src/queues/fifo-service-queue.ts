@@ -1,4 +1,4 @@
-import { Event, Queue, Worker } from "..";
+import { Event, ServiceQueue, Worker } from "..";
 
 
 type Item = { callback: Function, event: Event };
@@ -6,7 +6,7 @@ type Item = { callback: Function, event: Event };
 /**
  * A FIFO queue implementation.
  */
-export class FIFOQueue implements Queue {
+export class FIFOServiceQueue implements ServiceQueue {
   public readonly items: Item[] = [];
   private workers: Worker[] = [];
   private capacity: number = 0;
@@ -25,39 +25,7 @@ export class FIFOQueue implements Queue {
           resolve(data);
       }
       this.add({ event, callback });
-
     })
-  }
-  isFull(): boolean {
-    return this.items.length >= this.capacity
-  }
-  hasFreeWorker(): boolean {
-    return this.workers.some(w => w.event == null);
-  }
-  hasWorkToDo(): boolean {
-    return this.items.length > 0;
-  }
-
-  add(item: Item): void {
-    if (this.isFull())
-      throw "fail"
-
-    this.items.push(item);
-    this.work();
-  }
-
-  work(): void {
-    if (!this.hasFreeWorker())
-      return;
-
-    if (!this.hasWorkToDo())
-      return;
-
-
-    const nextUp: Item = this.items.shift() as Item
-    const worker = this.workers.find(w => w.event == null) as Worker;
-    worker.event = nextUp.event;
-    nextUp.callback(null, worker);
   }
 
   length(): number {
@@ -68,6 +36,11 @@ export class FIFOQueue implements Queue {
   }
   getCapacity(): number {
     return this.capacity;
+  }
+
+
+  working(): number {
+    return this.workers.filter(w => w.event == null).length;
   }
 
   /**
@@ -94,5 +67,64 @@ export class FIFOQueue implements Queue {
   }
   getNumWorkers(): number {
     return this.workers.length
+  }
+
+
+  isFull(): boolean {
+    return !this.canEnqueue() && !this.hasFreeWorker()
+  }
+  canEnqueue(): boolean {
+    return this.items.length < this.capacity;
+  }
+  hasFreeWorker(): boolean {
+    return this.workers.some(w => w.event == null);
+  }
+
+  
+  work(): void {
+    if (!this.hasFreeWorker())
+      return;
+
+    if (!this.hasWorkToDo())
+      return;
+
+    const nextUp: Item = this.items.shift() as Item
+    const worker = this.workers.find(w => w.event == null) as Worker;
+    this.assignWorkToWorker(worker, nextUp);
+  }
+  
+  private assignWorkToWorker(worker:Worker, item:Item) {
+    worker.event = item.event;
+    item.callback(null, worker);
+  }
+
+  private hasWorkToDo(): boolean {
+    return this.items.length > 0;
+  }
+
+  /**
+   * This function exists since its clean, preserving other functions which
+   * would need corrections if a "hacky" way (such as using the items array 
+   * to deliver immediate work to the workers, which was really tempting)
+   * @param item 
+   * @returns 
+   */
+  private add(item: Item): void {
+    // process immediately by assigning a free worker
+    if(this.hasFreeWorker()) {
+      const worker = this.workers.find(w => w.event == null) as Worker;
+      this.assignWorkToWorker(worker, item);
+      return;
+    }
+
+    // defer to later by appending to the item queue
+    if(this.canEnqueue()) {
+      this.items.push(item);
+      this.work();
+      return;
+    }
+
+    //otherwise reject
+    throw "fail"
   }
 }
