@@ -162,4 +162,4 @@ Node 10: Some behavioral changes - likely due to changes in the NodeJS task proc
 
 ## Publications
 
-Coming Soon!
+**ICSE 2021 Demonstrations Track**: *Quartermaster: A Tool for Modeling and Simulating System Degradation* [Proceedings](https://www.computer.org/csdl/proceedings-article/icse-companion/2021/121900a057/1sET5Q6iyyI) | [arXiv](https://arxiv.org/abs/2103.03956#) 
