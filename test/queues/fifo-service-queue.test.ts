@@ -9,6 +9,91 @@ describe('FIFOServiceQueue', () => {
     metronome.stop(true);
   })
 
+
+  describe('#setCapacity()', () => {
+    beforeEach(() => {
+      queue = new FIFOServiceQueue(3, 1);
+    });
+    test('sets the value', async () => {
+      queue.setCapacity(10);
+      expect(queue.getCapacity()).toBe(10);
+    })
+    test('floors decimal values', async () => {
+      queue.setCapacity(0.5);
+      expect(queue.getCapacity()).toBe(0);
+      queue.setCapacity(1.999);
+      expect(queue.getCapacity()).toBe(1);
+      queue.setCapacity(-0.5);
+      expect(queue.getCapacity()).toBe(-1);
+    })
+  });
+  describe('#setNumWorkers()', () => {
+    beforeEach(() => {
+      queue = new FIFOServiceQueue(3, 1);
+    });
+    test('sets the value', async () => {
+      queue.setNumWorkers(10);
+      expect(queue.getNumWorkers()).toBe(10);
+    })
+    test('floors decimal values', async () => {
+      queue.setNumWorkers(0.5);
+      expect(queue.getNumWorkers()).toBe(0);
+      queue.setNumWorkers(1.999);
+      expect(queue.getNumWorkers()).toBe(1);
+      queue.setNumWorkers(-0.5);
+      expect(queue.getNumWorkers()).toBe(0);
+    })
+    test('has lower bound of 0', async () => {
+      queue.setNumWorkers(-0.5);
+      expect(queue.getNumWorkers()).toBe(0);
+      queue.setNumWorkers(-10);
+      expect(queue.getNumWorkers()).toBe(0);
+    });
+  });
+
+  describe('#hasFreeWorker()', () => {
+    beforeEach(() => {
+      queue = new FIFOServiceQueue(3, 3);
+    });
+    test('is true when empty', async () => {
+      expect(queue.items.length).toBe(0);
+      expect(queue.getNumWorkers()).toBeGreaterThan(0);
+      expect(queue.hasFreeWorker()).toBe(true);
+    })
+    test('false when 0 workers', async () => {
+      queue.setNumWorkers(0);
+      expect(queue.hasFreeWorker()).toBe(false);
+    })
+    test('true when not workers are all busy', async () => {
+      queue.enqueue(new Event("a"));
+      queue.enqueue(new Event("b"));
+      expect(queue.getNumWorkers()).toBe(3);
+      expect(queue.hasFreeWorker()).toBe(true);
+    })
+    test('false when workers are all busy', async () => {
+      queue.enqueue(new Event("a"));
+      queue.enqueue(new Event("b"));
+      queue.enqueue(new Event("c"));
+      expect(queue.getNumWorkers()).toBe(3);
+      expect(queue.hasFreeWorker()).toBe(false);
+    })
+  });
+
+  describe('#working()', () => {
+    beforeEach(() => {
+      queue = new FIFOServiceQueue(3, 3);
+    });
+    test('0 when empty', async () => {
+      expect(queue.working()).toBe(0);
+    })
+    test('increases when given work', async () => {
+      queue.enqueue(new Event("a"));
+      expect(queue.working()).toBe(1);
+    })
+  });
+
+
+  /* Behavioral tests */
   describe('typical', () => {
     beforeEach(() => {
       queue = new FIFOServiceQueue(3, 1);
@@ -23,7 +108,6 @@ describe('FIFOServiceQueue', () => {
       expect(worker).toBeDefined;
       expect(metronome.now() - time).toBe(0);
     })
-
     describe('with 1 worker', () => {
       test('processes events in order', async () => {
         return testSequence(queue,
