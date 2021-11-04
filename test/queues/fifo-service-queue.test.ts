@@ -92,6 +92,34 @@ describe('FIFOServiceQueue', () => {
     })
   });
 
+  describe('#canEnqueue()', () => {
+    beforeEach(() => {
+      queue = new FIFOServiceQueue(2, 2);
+    });
+    test('true when empty', async () => {
+      expect(queue.canEnqueue()).toBe(true);
+    })
+    test('true when no capacity used', async () => {
+      queue.enqueue(new Event("a"));
+      expect(queue.canEnqueue()).toBe(true);
+      queue.enqueue(new Event("b"));
+      expect(queue.canEnqueue()).toBe(true);
+    })
+    test('true when partial capacity used', async () => {
+      queue.enqueue(new Event("a"));
+      queue.enqueue(new Event("b"));
+      queue.enqueue(new Event("c"));
+      expect(queue.canEnqueue()).toBe(true);
+    })
+    test('false when full capacity used', async () => {
+      queue.enqueue(new Event("a"));
+      queue.enqueue(new Event("b"));
+      queue.enqueue(new Event("c"));
+      queue.enqueue(new Event("d"));
+      expect(queue.canEnqueue()).toBe(false);
+    })
+  });
+
 
   /* Behavioral tests */
   describe('typical', () => {

@@ -44,6 +44,9 @@ class Metronome {
     this._stopResolve = null;
   }
 
+  /**
+   * @returns The current tick in the simulation.
+   */
   now() {
     return this._currentTick;
   }

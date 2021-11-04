@@ -8,6 +8,11 @@ import { Event } from "../";
  * `stage.attempts` should be >=2 for at least one retry.
  */
 export class Retry extends WrappedStage {
+
+  /**
+   * The number of attempts to call the wrapped stage.
+   * @defaultvalue 2
+   */
   public attempts: number = 2;
   async workOn(event: Event): Promise<void> {
     let attempt: number = 1;
