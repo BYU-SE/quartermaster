@@ -5,11 +5,6 @@ import { testSequence } from "./util";
 describe('FIFOServiceQueue', () => {
   let queue: FIFOServiceQueue;
 
-  afterEach(() => {
-    metronome.stop(true);
-  })
-
-
   describe('#setCapacity()', () => {
     beforeEach(() => {
       queue = new FIFOServiceQueue(3, 1);
@@ -128,6 +123,10 @@ describe('FIFOServiceQueue', () => {
       metronome.resetCurrentTime();
       metronome.start();
     })
+    afterEach(() => {
+      metronome.stop(true);
+    })
+  
 
     test('accepts requests', async () => {
       const time = metronome.now();
@@ -195,6 +194,9 @@ describe('FIFOServiceQueue', () => {
       queue = new FIFOServiceQueue(0, 1);
       metronome.resetCurrentTime();
       metronome.start();
+    })
+    afterEach(() => {
+      metronome.stop(true);
     })
     test('accepts', async () => {
       const time = metronome.now();
