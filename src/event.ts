@@ -26,4 +26,7 @@ export class Event {
     this.idCounter = 0;
   }
 
+  public static getIDCounter(): number {
+    return this.idCounter;
+  }
 }

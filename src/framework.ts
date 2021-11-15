@@ -29,7 +29,7 @@ class Simulation {
   reset() {
     this._arrivalRate = 0;
     this._eventsSent = 0;
-    Event.resetIDCounter;
+    Event.resetIDCounter();
   }
 
   /**
