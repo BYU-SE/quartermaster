@@ -204,7 +204,7 @@ class Simulation {
 
 
   private createEvent(stage: Stage): Promise<Event> {
-    const key = "e-" + normal(this.keyspaceMean, this.keyspaceStd);
+    const key = "" + normal(this.keyspaceMean, this.keyspaceStd);
     const event = new Event(key);
     const time = event.responseTime;
     time.startTime = metronome.now();
