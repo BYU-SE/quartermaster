@@ -249,17 +249,19 @@ export const simulation = new Simulation();
  * 3. % latencies
  * 4. % slow failures? (interesting?)
  * @param events The events that have completed the simulation
+ * @return {EventSummary} Returns statistics for the events
  */
-export function eventSummary(events: Event[], additionalColumns?: EventSummaryColumn[]): void {
+export function eventSummary(events: Event[], additionalColumns?: EventSummaryColumn[]): EventSummary {
   const summary = createEventSummary(events, additionalColumns);
 
   console.log("Overview of Events");
   console.table(summary);
+  return summary;
 }
 
 
-type EventSummary = ResponseData[];
-type ResponseData = {
+export type EventSummary = SummaryResponseData[];
+export type SummaryResponseData = {
   type: Response;
   count: number;
   percent: string;
@@ -322,12 +324,14 @@ function createEventSummary(events: Event[], additionalColumns?: EventSummaryCol
  * stage; specifically traffic and timing summaries.
  * 
  * @param stages A stage or an array of stages to report stats about
+ * @return {StageSummary} Returns statistics for the stages
  */
-export function stageSummary(stages: Stage | Stage[], additionalColumns?: StageSummaryColumn[]): void {
+export function stageSummary(stages: Stage | Stage[], additionalColumns?: StageSummaryColumn[]): StageSummary {
   const arr = Array.isArray(stages) ? stages : [stages];
   const summary = createStageSummary(arr, additionalColumns);
   console.log("\nOverview of event behavior in stage")
   console.table(summary)
+  return summary;
 }
 
 type StageSummary = StageData[];
