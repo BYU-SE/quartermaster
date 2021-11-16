@@ -85,8 +85,8 @@ describe('Framework', () => {
     test('returns an object of type event summary', () => {
       let eventArray: Event[] = [new Event('test1'), new Event('test2'), new Event('test3')];
       let summary: EventSummary = eventSummary(eventArray);
-      expect(summary.length).toBe(2);
-      expect(summary[0].count).toBe(3);
+      expect(summary.length).toBe(3);
+      expect(summary[2].count).toBe(3);
     })
   })
   describe('#stageSummary', () => {

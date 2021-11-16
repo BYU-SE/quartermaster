@@ -262,7 +262,7 @@ export function eventSummary(events: Event[], additionalColumns?: EventSummaryCo
 
 export type EventSummary = SummaryResponseData[];
 export type SummaryResponseData = {
-  type: Response;
+  type: Response | "in-flight"
   count: number;
   percent: string;
   mean_latency: string;
@@ -276,11 +276,15 @@ type EventSummaryColumn = {
 function createEventSummary(events: Event[], additionalColumns?: EventSummaryColumn[]): EventSummary {
   const success: Event[] = [];
   const fail: Event[] = [];
+  const inFlight: Event[] = [];
 
   events.forEach(e => {
     if (e.response == "fail") {
       fail.push(e);
-    } else {
+    } else if (e.response == null) {
+      inFlight.push(e);
+    }
+     else {
       success.push(e);
     }
   })
@@ -296,6 +300,7 @@ function createEventSummary(events: Event[], additionalColumns?: EventSummaryCol
 
   const successRow: any = { type: "success" as Response };
   const failRow: any = { type: "fail" as Response };
+  const inFlightRow: any = { type: "in-flight" };
 
   const precision = 3;
   columns.forEach((col, i) => {
@@ -306,9 +311,12 @@ function createEventSummary(events: Event[], additionalColumns?: EventSummaryCol
 
     const failResult = col(fail);
     failRow[propName] = failResult % 1 == 0 ? failResult : failResult.toFixed(precision);
+
+    const inFlightResult = col(inFlight);
+    inFlightRow[propName] = inFlightResult % 1 == 0 ? inFlightResult : inFlightResult.toFixed(precision);
   })
 
-  const table = [successRow, failRow];
+  const table = [successRow, failRow, inFlightRow];
   return table;
 }
 
