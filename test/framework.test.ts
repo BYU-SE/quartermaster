@@ -1,4 +1,4 @@
-import { Event, metronome, simulation, Stage } from "../src";
+import { Event, eventSummary, EventSummary, metronome, simulation, Stage, stageSummary } from "../src";
 
 class SuccessStage extends Stage {
   workOn(e: Event): Promise<void> {
@@ -40,6 +40,8 @@ describe('Framework', () => {
     })
   })
 
+ 
+
   describe("#run", () => {
     test('sends the correct number of events to the first stage', async () => {
       await simulation.run(stage, 1000);
@@ -79,6 +81,22 @@ describe('Framework', () => {
     })
   })
 
+  describe('#eventSummary', () => {
+    test('returns an object of type event summary', () => {
+      let eventArray: Event[] = [new Event('test1'), new Event('test2'), new Event('test3')];
+      let summary: EventSummary = eventSummary(eventArray);
+      expect(summary.length).toBe(2);
+      expect(summary[0].count).toBe(3);
+    })
+  })
+  describe('#stageSummary', () => {
+    test('returns an object of type stage summary', () => {
+      let stageArray: Stage[] = [new SuccessStage(), new SuccessStage()];
+      let summary = stageSummary(stageArray);
+      expect(summary.length).toBe(2);
+    })
+  })
+
   async function verifySimulationRate(rate: number): Promise<void> {
     const numEvents = Math.max(1000, rate * 2)
     metronome.resetCurrentTime();
@@ -91,5 +109,6 @@ describe('Framework', () => {
     expect(stageWorkSpy).toHaveBeenCalledTimes(numEvents);
   }
 
+    
 })
 
