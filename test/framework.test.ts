@@ -20,13 +20,33 @@ describe('Framework', () => {
     simulation.eventsPer1000Ticks = 200;
   })
 
+  describe("#reset", () => {
+    beforeEach(async () => {
+      await simulation.run(stage, 2);
+    })
+  
+    test('resets the arrival rate', () => {
+      simulation.reset();
+      expect(simulation.getArrivalRate()).toBe(0);
+    })
+    test('resets the events sent counter', () => {
+      simulation.reset();
+      expect(simulation.getEventsSent()).toBe(0);
+    })
+    test('resets the event id counter', () => {
+      expect(Event.getIDCounter()).toBe(2);
+      simulation.reset();
+      expect(Event.getIDCounter()).toBe(0);
+    })
+  })
+
   describe("#run", () => {
     test('sends the correct number of events to the first stage', async () => {
       await simulation.run(stage, 1000);
       expect(stageWorkSpy).toHaveBeenCalledTimes(1000);
     })
 
-
+    
     describe("correctly dispatches events at a rate of eventsPer1000Ticks", () => {
       test('200', async () => {
         await verifySimulationRate(200);
