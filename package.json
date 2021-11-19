@@ -2,6 +2,11 @@
   "name": "@byu-se/quartermaster",
   "version": "1.1.1",
   "description": "A Tool for Modeling and Simulating System Degradation",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BYU-SE/quartermaster.git"
+  },
+  "homepage": "https://github.com/BYU-SE/quartermaster",
   "keywords": [
     "quartermaster",
     "graceful",
