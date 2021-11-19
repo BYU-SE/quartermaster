@@ -8,7 +8,7 @@ import { ServiceQueue } from "./";
  */
 export class Worker {
   public event: Event | null = null;
-  constructor(private queue: ServiceQueue | null) { }
+  constructor(protected queue: ServiceQueue | null) { }
 
   /**
    * Unlocks the worker to be freed, so it can process another event on the
