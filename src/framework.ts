@@ -29,6 +29,7 @@ class Simulation {
   reset() {
     this._arrivalRate = 0;
     this._eventsSent = 0;
+    Event.resetIDCounter();
   }
 
   /**
@@ -203,7 +204,7 @@ class Simulation {
 
 
   private createEvent(stage: Stage): Promise<Event> {
-    const key = "e-" + normal(this.keyspaceMean, this.keyspaceStd);
+    const key = "" + normal(this.keyspaceMean, this.keyspaceStd);
     const event = new Event(key);
     const time = event.responseTime;
     time.startTime = metronome.now();
@@ -248,18 +249,20 @@ export const simulation = new Simulation();
  * 3. % latencies
  * 4. % slow failures? (interesting?)
  * @param events The events that have completed the simulation
+ * @return {EventSummary} Returns statistics for the events
  */
-export function eventSummary(events: Event[], additionalColumns?: EventSummaryColumn[]): void {
+export function eventSummary(events: Event[], additionalColumns?: EventSummaryColumn[]): EventSummary {
   const summary = createEventSummary(events, additionalColumns);
 
   console.log("Overview of Events");
   console.table(summary);
+  return summary;
 }
 
 
-type EventSummary = ResponseData[];
-type ResponseData = {
-  type: Response;
+export type EventSummary = SummaryResponseData[];
+export type SummaryResponseData = {
+  type: Response | "in-flight"
   count: number;
   percent: string;
   mean_latency: string;
@@ -273,11 +276,15 @@ type EventSummaryColumn = {
 function createEventSummary(events: Event[], additionalColumns?: EventSummaryColumn[]): EventSummary {
   const success: Event[] = [];
   const fail: Event[] = [];
+  const inFlight: Event[] = [];
 
   events.forEach(e => {
     if (e.response == "fail") {
       fail.push(e);
-    } else {
+    } else if (e.response == null) {
+      inFlight.push(e);
+    }
+     else {
       success.push(e);
     }
   })
@@ -293,6 +300,7 @@ function createEventSummary(events: Event[], additionalColumns?: EventSummaryCol
 
   const successRow: any = { type: "success" as Response };
   const failRow: any = { type: "fail" as Response };
+  const inFlightRow: any = { type: "in-flight" };
 
   const precision = 3;
   columns.forEach((col, i) => {
@@ -303,9 +311,12 @@ function createEventSummary(events: Event[], additionalColumns?: EventSummaryCol
 
     const failResult = col(fail);
     failRow[propName] = failResult % 1 == 0 ? failResult : failResult.toFixed(precision);
+
+    const inFlightResult = col(inFlight);
+    inFlightRow[propName] = inFlightResult % 1 == 0 ? inFlightResult : inFlightResult.toFixed(precision);
   })
 
-  const table = [successRow, failRow];
+  const table = [successRow, failRow, inFlightRow];
   return table;
 }
 
@@ -321,12 +332,14 @@ function createEventSummary(events: Event[], additionalColumns?: EventSummaryCol
  * stage; specifically traffic and timing summaries.
  * 
  * @param stages A stage or an array of stages to report stats about
+ * @return {StageSummary} Returns statistics for the stages
  */
-export function stageSummary(stages: Stage | Stage[], additionalColumns?: StageSummaryColumn[]): void {
+export function stageSummary(stages: Stage | Stage[], additionalColumns?: StageSummaryColumn[]): StageSummary {
   const arr = Array.isArray(stages) ? stages : [stages];
   const summary = createStageSummary(arr, additionalColumns);
   console.log("\nOverview of event behavior in stage")
   console.table(summary)
+  return summary;
 }
 
 type StageSummary = StageData[];

@@ -1,4 +1,4 @@
-import { Event, metronome, simulation, Stage } from "../src";
+import { Event, eventSummary, EventSummary, metronome, simulation, Stage, stageSummary } from "../src";
 
 class SuccessStage extends Stage {
   workOn(e: Event): Promise<void> {
@@ -20,13 +20,35 @@ describe('Framework', () => {
     simulation.eventsPer1000Ticks = 200;
   })
 
+  describe("#reset", () => {
+    beforeEach(async () => {
+      await simulation.run(stage, 2);
+    })
+  
+    test('resets the arrival rate', () => {
+      simulation.reset();
+      expect(simulation.getArrivalRate()).toBe(0);
+    })
+    test('resets the events sent counter', () => {
+      simulation.reset();
+      expect(simulation.getEventsSent()).toBe(0);
+    })
+    test('resets the event id counter', () => {
+      expect(Event.getIDCounter()).toBe(2);
+      simulation.reset();
+      expect(Event.getIDCounter()).toBe(0);
+    })
+  })
+
+ 
+
   describe("#run", () => {
     test('sends the correct number of events to the first stage', async () => {
       await simulation.run(stage, 1000);
       expect(stageWorkSpy).toHaveBeenCalledTimes(1000);
     })
 
-
+    
     describe("correctly dispatches events at a rate of eventsPer1000Ticks", () => {
       test('200', async () => {
         await verifySimulationRate(200);
@@ -59,6 +81,22 @@ describe('Framework', () => {
     })
   })
 
+  describe('#eventSummary', () => {
+    test('returns an object of type event summary', () => {
+      let eventArray: Event[] = [new Event('test1'), new Event('test2'), new Event('test3')];
+      let summary: EventSummary = eventSummary(eventArray);
+      expect(summary.length).toBe(3);
+      expect(summary[2].count).toBe(3);
+    })
+  })
+  describe('#stageSummary', () => {
+    test('returns an object of type stage summary', () => {
+      let stageArray: Stage[] = [new SuccessStage(), new SuccessStage()];
+      let summary = stageSummary(stageArray);
+      expect(summary.length).toBe(2);
+    })
+  })
+
   async function verifySimulationRate(rate: number): Promise<void> {
     const numEvents = Math.max(1000, rate * 2)
     metronome.resetCurrentTime();
@@ -71,5 +109,6 @@ describe('Framework', () => {
     expect(stageWorkSpy).toHaveBeenCalledTimes(numEvents);
   }
 
+    
 })
 

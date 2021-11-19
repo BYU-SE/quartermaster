@@ -9,10 +9,9 @@ import {
 import { ServiceQueue } from "../queues";
 
 /**
- * The primary unit of a fault tolerant technique.
+ * The primary unit of computation.
  * 
- * By default, it includes a FIFO queue with fixed capacity and worker pool.
- * 
+ * By default, there is no queue or pool.
  * 
  * TODO: consider if we can break queue out into a QueuedStage since it 
  * could be superfluous for some techniques.

@@ -36,5 +36,61 @@ describe('Cache', () => {
     expect(size).toBe(0);
   })
 
+
+  describe('#setCapacity()', () => {
+    test('removes all data in the cache', async () => {
+      dependency.replay = [true, true]
+
+      await cache.accept(new Event("first"));
+      await cache.accept(new Event("second"));
+
+      const originalSize = Object.keys(cache.getStore()).length;
+      expect(originalSize).toBe(2);
+
+      cache.clear();
+
+      const clearedSize = Object.keys(cache.getStore()).length;
+      expect(clearedSize).toBe(0);
+    })
+  });
+
+  describe('#remove()', () => {
+    test('removes the specified key when found', async () => {
+      dependency.replay = [true]
+
+      await cache.accept(new Event("first"));
+
+      cache.remove("first");
+      
+      expect(cache.get("first")).toBeUndefined();
+    })
+    test('does not remove other keys', async () => {
+      dependency.replay = [true, true]
+
+      await cache.accept(new Event("first"));
+      await cache.accept(new Event("second"));
+
+      cache.remove("second");
+
+      expect(cache.get("first")).toBeDefined();
+      expect(cache.get("second")).toBeUndefined();
+      const clearedSize = Object.keys(cache.getStore()).length;
+      expect(clearedSize).toBe(1);
+    })
+    test('silent when the key is not found', async () => {
+      dependency.replay = [true, true]
+
+      await cache.accept(new Event("first"));
+      await cache.accept(new Event("second"));
+
+      cache.remove("third");
+
+      expect(cache.get("first")).toBeDefined();
+      expect(cache.get("second")).toBeDefined();
+      const clearedSize = Object.keys(cache.getStore()).length;
+      expect(clearedSize).toBe(2);
+    })
+  });
+
 })
 

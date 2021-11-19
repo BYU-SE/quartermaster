@@ -32,7 +32,7 @@ export class FIFOServiceQueue implements ServiceQueue {
     return this.items.length;
   }
   setCapacity(capacity: number): void {
-    this.capacity = capacity;
+    this.capacity = Math.floor(capacity);
   }
   getCapacity(): number {
     return this.capacity;
@@ -40,16 +40,19 @@ export class FIFOServiceQueue implements ServiceQueue {
 
 
   working(): number {
-    return this.workers.filter(w => w.event == null).length;
+    return this.workers.filter(w => w.event != null).length;
   }
 
   /**
    * Sets the number of workers. If more than there are currently, add new 
    * Workers. If less than there are currently, just drop some from the pool,
    * while allowing those workers to process whatever work they have remaining
-   * @param num Then new amount of workers
+   * @param num A positive integer representing then new amount of workers
    */
   setNumWorkers(num: number): void {
+
+    num = Math.max(0, Math.floor(num));
+
     if (num > this.workers.length) {
       while (this.workers.length < num) {
         this.workers.push(new Worker(this));
@@ -80,7 +83,7 @@ export class FIFOServiceQueue implements ServiceQueue {
     return this.workers.some(w => w.event == null);
   }
 
-  
+
   work(): void {
     if (!this.hasFreeWorker())
       return;
@@ -92,8 +95,8 @@ export class FIFOServiceQueue implements ServiceQueue {
     const worker = this.workers.find(w => w.event == null) as Worker;
     this.assignWorkToWorker(worker, nextUp);
   }
-  
-  private assignWorkToWorker(worker:Worker, item:Item) {
+
+  private assignWorkToWorker(worker: Worker, item: Item) {
     worker.event = item.event;
     item.callback(null, worker);
   }
@@ -111,14 +114,14 @@ export class FIFOServiceQueue implements ServiceQueue {
    */
   private add(item: Item): void {
     // process immediately by assigning a free worker
-    if(this.hasFreeWorker()) {
+    if (this.hasFreeWorker()) {
       const worker = this.workers.find(w => w.event == null) as Worker;
       this.assignWorkToWorker(worker, item);
       return;
     }
 
     // defer to later by appending to the item queue
-    if(this.canEnqueue()) {
+    if (this.canEnqueue()) {
       this.items.push(item);
       this.work();
       return;
