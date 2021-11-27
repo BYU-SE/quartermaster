@@ -33,6 +33,17 @@ class Simulation {
   }
 
   /**
+ * Execute a simulation.
+ * 
+ * Legacy method, supporting Quartermaster Versions < v1.1.4
+ * 
+ * @param stage The stage where events will be inserted
+ * @param numEventsToSend The number of events to be sent
+ */
+  async run(stage: Stage, numEventsToSend: number): Promise<Event[]> {
+    return await this.runForNumEvents(stage, numEventsToSend);
+  }
+/**
  * Execute a simulation
  * 
  * TODO: Move to own class, so we can set properties on this later, such as changing rates mid-simulation,
@@ -41,7 +52,7 @@ class Simulation {
  * @param stage The stage where events will be inserted
  * @param numEventsToSend The number of events to be sent
  */
-  async run(stage: Stage, numEventsToSend: number): Promise<Event[]> {
+  async runForNumEvents(stage: Stage, numEventsToSend: number): Promise<Event[]> {
     if (this._running) {
       throw "another simulation is already running";
     }
