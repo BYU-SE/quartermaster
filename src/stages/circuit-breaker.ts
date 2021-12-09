@@ -18,13 +18,35 @@ type CircuitBreakerState = "closed" | "open" | "half-open"
  */
 
 export class CircuitBreaker extends WrappedStage {
+  /**
+   * @defaultvalue 0.3
+   */
   public errorThreshold = 0.3;
+
+  /**
+   * @defaultvalue 10
+   */
   public capacity: number = 10;
+
+  /**
+   * @defaultvalue 3000
+   */
   public timeInOpenState: number = 3000;
 
 
+  /**
+   * @defaultvalue "closed"
+   */
   protected _state: CircuitBreakerState = "closed";
+
+  /**
+   * @defaultvalue []
+   */
   protected _ring: number[] = [];
+
+  /**
+   * @defaultvalue 0
+   */
   protected _openTime = 0;
   async workOn(event: Event): Promise<void> {
     if (this._state == "open")

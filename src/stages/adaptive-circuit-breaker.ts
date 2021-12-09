@@ -10,13 +10,31 @@ import { Stage } from "./stage";
  */
 
 export class AdaptiveCircuitBreaker extends CircuitBreaker {
+  /**
+   * @defaultvalue 0.3
+   */
   public errorThreshold = 0.3;
+
+  /**
+   * @defaultvalue 10
+   */
   public capacity: number = 10;
+
+  /**
+   * @defaultvalue 0
+   */
   public timeInOpenState: number = 0;
 
-
   private _queue: ServiceQueue | null = null;
+
+  /**
+   * @defaultvalue 0
+   */
   private _queueMax: number = 0;
+
+  /**
+   * @defaultvalue 1
+   */
   private _scale: number = 1;
 
 

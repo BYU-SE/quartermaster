@@ -6,11 +6,20 @@ import { metronome } from "../metronome";
  * elements first. Also includes a TTL.
  */
 export class LRUCache extends Cache {
+  /**
+   * @defaultvalue 10000
+   */
   public ttl: number = 10000;
+
+  /**
+   * @defaultvalue 1000
+   */
   public capacity: number = 1000;
+
+  /**
+   * @defaultvalue []
+   */
   protected order: string[] = [];
-
-
 
   public get(key: string): any {
     this.prune();

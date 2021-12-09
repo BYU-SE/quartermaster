@@ -5,6 +5,9 @@ import { Event } from "../";
  */
 
 export class AvailableDependency extends Stage {
+  /**
+   * @defaultvalue 0.7
+   */
   public availability: number = 0.7;
   async workOn(event: Event): Promise<void> {
     const available = Math.random() < this.availability;
