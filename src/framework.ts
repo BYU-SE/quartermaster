@@ -279,7 +279,7 @@ export type SummaryResponseData = {
   mean_latency: string;
   std_latency: string;
 }
-type EventSummaryColumnFunction = (events: Event[]) => number;
+type EventSummaryColumnFunction = (events: Event[]) => number | string;
 type EventSummaryColumn = {
   name: string;
   func: EventSummaryColumnFunction;
@@ -317,14 +317,20 @@ function createEventSummary(events: Event[], additionalColumns?: EventSummaryCol
   columns.forEach((col, i) => {
     const propName = names[i] || `Column ${i}`
 
-    const successResult = col(success);
-    successRow[propName] = successResult % 1 == 0 ? successResult : successResult.toFixed(precision);
+    let successResult = col(success);
+    if(typeof successResult === "number" && successResult % 1 != 0) // not a whole number
+      successResult = successResult.toFixed(precision);
+    successRow[propName] = successResult;
 
-    const failResult = col(fail);
-    failRow[propName] = failResult % 1 == 0 ? failResult : failResult.toFixed(precision);
+    let failResult = col(fail);
+    if(typeof failResult === "number" && failResult % 1 != 0) // not a whole number
+      failResult = failResult.toFixed(precision);
+    failRow[propName] = failResult;
 
-    const inFlightResult = col(inFlight);
-    inFlightRow[propName] = inFlightResult % 1 == 0 ? inFlightResult : inFlightResult.toFixed(precision);
+    let inFlightResult = col(inFlight);
+    if(typeof inFlightResult === "number" && inFlightResult % 1 != 0) // not a whole number
+      inFlightResult = inFlightResult.toFixed(precision);
+    inFlightRow[propName] = inFlightResult;
   })
 
   const table = [successRow, failRow, inFlightRow];
@@ -363,7 +369,7 @@ type StageData = {
   success: number;
   fail: number;
 }
-type StageSummaryColumnFunction = (stage: Stage) => number;
+type StageSummaryColumnFunction = (stage: Stage) => number | string;
 type StageSummaryColumn = {
   name: string;
   func: StageSummaryColumnFunction;

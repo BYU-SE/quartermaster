@@ -10,13 +10,34 @@ import { Stage } from "./stage";
  */
 
 export class AdaptiveCircuitBreaker extends CircuitBreaker {
+  /**
+   * The percent of errors that will trigger the circuit breaker to open
+   * @defaultvalue 0.3
+   */
   public errorThreshold = 0.3;
+
+  /**
+   * How many requests to keep track of to determine the error threshold
+   * @defaultvalue 10
+   */
   public capacity: number = 10;
+
+  /**
+   * The length of time, in ticks, the circuit breaker remains open (1000 = 1 sec)
+   * @defaultvalue 0
+   */
   public timeInOpenState: number = 0;
 
-
   private _queue: ServiceQueue | null = null;
+
+  /**
+   * @defaultvalue 0
+   */
   private _queueMax: number = 0;
+
+  /**
+   * @defaultvalue 1
+   */
   private _scale: number = 1;
 
 

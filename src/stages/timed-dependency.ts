@@ -7,14 +7,35 @@ import { Event, normal, metronome } from "../";
  * Probably could be refactored to extend AvailableStage
  */
 export class TimedDependency extends Stage {
+  /**
+   * @defaultvalue 150
+   */
   public mean: number = 150;
+
+  /**
+   * @defaultvalue 150
+   */
   public errorMean: number = 150;
+
+  /**
+   * @defaultvalue 25
+   */
   public std: number = 25;
+
+  /**
+   * @defaultvalue 25
+   */
   public errorStd: number = 25;
 
 
+  /**
+   * @defaultvalue 0.9995
+   */
   public availability = 0.9995;
 
+  /**
+   * @defaultvalue 0
+   */
   private _concurrent: number = 0;
   async workOn(event: Event): Promise<void> {
     this._concurrent++;
