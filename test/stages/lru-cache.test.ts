@@ -62,4 +62,14 @@ describe('LRUCache', () => {
     const size = Object.keys(store).length;
     expect(size).toBe(cache.capacity);
   })
+
+  test("clears order and cache items", async () => {
+    cache.set("1", {time:0});
+    cache.clear();
+    
+    const store = cache.getStore();
+    const size = Object.keys(store).length;
+    expect(size).toBe(0);
+    expect(cache["order"].length).toBe(0);
+  });
 })

@@ -1,4 +1,4 @@
-import { Event, ServiceQueue, stats } from "../";
+import { Event, ResponsePayload, ServiceQueue, stats } from "../";
 import { CircuitBreaker } from "./circuit-breaker";
 import { Stage } from "./stage";
 /**
@@ -45,8 +45,8 @@ export class AdaptiveCircuitBreaker extends CircuitBreaker {
     super(wrapped);
   }
 
-  async workOn(event: Event): Promise<void> {
-    await this.wrapped.accept(event);
+  async workOn(event: Event): Promise<ResponsePayload> {
+    return await this.wrapped.accept(event);
   }
 
   public decideState(): void {

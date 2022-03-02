@@ -1,4 +1,4 @@
-import { Event, Response, metronome, Stage } from "../../src";
+import { Event, metronome, Stage } from "../../src";
 
 
 /**
@@ -6,12 +6,6 @@ import { Event, Response, metronome, Stage } from "../../src";
  */
 class DummyStage extends Stage {
   async workOn(event: Event): Promise<void> { }
-  public success(event: Event): Response {
-    return super.success(event);
-  }
-  public fail(event: Event): Response {
-    return super.fail(event);
-  }
   public add(event: Event): Promise<void> {
     return super.add(event);
   }
@@ -24,11 +18,9 @@ describe('Stage', () => {
   let accept: jest.SpyInstance;
   let add: jest.SpyInstance;
   let workOn: jest.SpyInstance;
-  let success: jest.SpyInstance;
-  let fail: jest.SpyInstance;
 
-  function createEvent(): Promise<Response> {
-    return stage.accept(new Event("e")).catch(e => "fail");
+  async function createEvent(): Promise<void> {
+    await stage.accept(new Event("e")).catch(e => null);
   }
 
   beforeEach(() => {
@@ -36,8 +28,6 @@ describe('Stage', () => {
     accept = jest.spyOn(stage, 'accept');
     add = jest.spyOn(stage, 'add');
     workOn = jest.spyOn(stage, 'workOn');
-    success = jest.spyOn(stage, 'success');
-    fail = jest.spyOn(stage, 'fail');
 
 
     metronome.resetCurrentTime();
@@ -75,28 +65,7 @@ describe('Stage', () => {
 
       expect(workOn).toHaveBeenCalledTimes(1);
     })
-    test('calls success() when no error is thrown and no rejected promise is returned', async () => {
-      await createEvent();
-
-      expect(success).toHaveBeenCalledTimes(1);
-    })
-    test('calls fail() when error thrown', async () => {
-      workOn.mockImplementation(() => { throw "fail" })
-      await createEvent();
-
-      expect(fail).toHaveBeenCalledTimes(1);
-      expect(success).not.toHaveBeenCalled();
-    })
-    test('calls fail() when rejected Promise is returned', async () => {
-      workOn.mockImplementation(() => Promise.reject("fail"))
-      await createEvent();
-
-      expect(fail).toHaveBeenCalledTimes(1);
-      expect(success).not.toHaveBeenCalled();
-    })
   })
-
-
 
 })
 

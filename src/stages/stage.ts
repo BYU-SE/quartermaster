@@ -1,12 +1,12 @@
 import {
   Event,
-  Response,
   NoServiceQueue,
   TimeStats,
   TrafficStats,
   metronome
 } from "../";
 import { ServiceQueue } from "../queues";
+import { ResponsePayload } from "../response";
 
 /**
  * The primary unit of computation.
@@ -36,7 +36,7 @@ export abstract class Stage {
    * Possibly a scheduling issue with promises and the nodejs micro-task scheduler.
    * @param event The event that has been allowed into the stage for processing
    */
-  public async accept(event: Event): Promise<Response> {
+  public async accept(event: Event): Promise<ResponsePayload> {
     const time = TimeStats.fromStage(this);
     event.addStageTime(time);
 
@@ -51,18 +51,20 @@ export abstract class Stage {
     const beforeWorkTime = metronome.now();
     try {
       this.traffic.workOn++;
-      await this.workOn(event);
+      const payload = await this.workOn(event);
       this.traffic.success++;
-      return this.success(event);
+      return payload;
     } catch (err) {
-      if (err != "fail") {
-        console.error(`Unexpected error thrown (not 'fail') in [Stage ${this.constructor.name}]:`);
-        console.error(err);
-        console.error("\n");
+      let payload: string;
+      if (typeof err !== "string") {
+        payload = JSON.stringify(err);
+        console.error(`Unexpected error thrown (not type: string, instead type ${typeof err} with properties: ${payload}) in [Stage ${this.constructor.name}]:`)
       }
-
+      else {
+        payload = err;
+      }
       this.traffic.fail++;
-      return this.fail(event);
+      throw payload;  // which one
     } finally {
       time.workTime = metronome.now() - beforeWorkTime;
       this.time.workTime += time.workTime;
@@ -86,25 +88,7 @@ export abstract class Stage {
    * The main method for each stage, which is called when an event is picked up
    * by a worker.
    * @param event The event that is being processed by the stage
+   * @returns the payload string
    */
-  abstract workOn(event: Event): Promise<void>;
-
-  /**
-   * A helper function which is called when workOn completes without rejection
-   * or a thrown error.
-   * @param event The event that successfully passed through the stage
-   */
-  protected success(event: Event): Response {
-    return "success"
-  }
-
-  /**
-   * A helper function which is called when workOn returns a rejected promise
-   * or throws an error
-   * @param event The event that was processing when the rejection occured
-   */
-  protected fail(event: Event): Response {
-    throw "fail"
-  }
-
+  abstract workOn(event: Event): Promise<ResponsePayload>;
 }

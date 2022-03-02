@@ -18,7 +18,7 @@ describe('Cache', () => {
   })
 
   test('stores previous results if successful', async () => {
-    dependency.replay = [true]
+    dependency.createReplays([true]);
 
     const res = await cache.accept(new Event("first"));
 
@@ -27,7 +27,7 @@ describe('Cache', () => {
     expect(size).toBe(1);
   })
   test('does not store result on fail', async () => {
-    dependency.replay = [false]
+    dependency.createReplays([false]);
 
     const res = await cache.accept(new Event("first")).catch(e => "fail");
 
@@ -39,7 +39,7 @@ describe('Cache', () => {
 
   describe('#setCapacity()', () => {
     test('removes all data in the cache', async () => {
-      dependency.replay = [true, true]
+      dependency.createReplays([true, true]);
 
       await cache.accept(new Event("first"));
       await cache.accept(new Event("second"));
@@ -56,7 +56,7 @@ describe('Cache', () => {
 
   describe('#remove()', () => {
     test('removes the specified key when found', async () => {
-      dependency.replay = [true]
+      dependency.createReplays([true]);
 
       await cache.accept(new Event("first"));
 
@@ -65,7 +65,7 @@ describe('Cache', () => {
       expect(cache.get("first")).toBeUndefined();
     })
     test('does not remove other keys', async () => {
-      dependency.replay = [true, true]
+      dependency.createReplays([true, true]);
 
       await cache.accept(new Event("first"));
       await cache.accept(new Event("second"));
@@ -78,7 +78,7 @@ describe('Cache', () => {
       expect(clearedSize).toBe(1);
     })
     test('silent when the key is not found', async () => {
-      dependency.replay = [true, true]
+      dependency.createReplays([true, true]);
 
       await cache.accept(new Event("first"));
       await cache.accept(new Event("second"));
@@ -91,6 +91,42 @@ describe('Cache', () => {
       expect(clearedSize).toBe(2);
     })
   });
+
+  test('preserves the wrapped stage\'s success payload', async () => {
+    dependency.createReplays([true], "custom-success");
+
+    const res = await cache.accept(new Event("first"));
+
+    expect(res).toBe("custom-success");
+  });
+
+  test('returns cached payload when already in cache', async () => {
+    dependency.createReplays([true, false], "custom-success", "custom-fail");
+
+    const res1 = await cache.accept(new Event("first"));
+    const res2 = await cache.accept(new Event("first"));
+
+    expect(res1).toBe("custom-success");
+    expect(res2).toBe("custom-success");
+  });
+
+  test('preserves the wrapped stage\'s fail payload', async () => {
+    dependency.createReplays([false], "custom-success", "custom-fail");
+    
+    const res = await cache.accept(new Event("first")).catch(e => e);
+    
+    expect(res).toBe("custom-fail");
+  });
+
+  test('preserves wrapped stage\'s success payload; failed event not stored in cache', async () => {
+    dependency.createReplays([false, true], "custom-success", "custom-fail");
+
+    const res1 = await cache.accept(new Event("first")).catch(e => e);
+    const res2 = await cache.accept(new Event("second")).catch(e => e);
+
+    expect(res2).toBe("custom-success");
+    expect(Object.keys(cache.getStore).length).toBe(0);
+  }) 
 
 })
 

@@ -1,4 +1,4 @@
-import { Response, TimeStats, ResponseStats } from ".";
+import { TimeStats, ResponseStats, Response } from ".";
 
 /**
  * An event goes through a stage. In web systems, it could be a web request.
@@ -21,7 +21,7 @@ export class Event<CustomProps extends object = {}> {
     return this.idCounter;
   }
 
-  
+
 
   public stageTimes: TimeStats[];
   public response: Response | null;
@@ -35,21 +35,21 @@ export class Event<CustomProps extends object = {}> {
    * Typed as any intentionally, so we can new up an empty object when the Event
    * is created
    */
-  private customProperties:any
-  
+  private customProperties: any
+
   constructor(public key: string) {
     this.stageTimes = [];
     this.response = null;
     this.responseTime = new ResponseStats();
     this.id = ++Event.idCounter;
     this.customProperties = {};
-   }
+  }
 
   addStageTime(t: TimeStats): void {
     this.stageTimes.push(t);
   }
-  
-  public get custom():CustomProps {
+
+  public get custom(): CustomProps {
     return this.customProperties;
   }
 }

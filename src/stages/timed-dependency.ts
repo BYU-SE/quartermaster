@@ -1,5 +1,5 @@
 import { Stage } from "./stage";
-import { Event, normal, metronome } from "../";
+import { Event, normal, metronome, MathFunctions, ResponsePayload } from "../";
 
 
 /**
@@ -37,9 +37,9 @@ export class TimedDependency extends Stage {
    * @defaultvalue 0
    */
   private _concurrent: number = 0;
-  async workOn(event: Event): Promise<void> {
+  async workOn(event: Event): Promise<ResponsePayload> {
     this._concurrent++;
-    const available = Math.random() < this.availability;
+    const available = MathFunctions.random() < this.availability;
     if (available) {
       const latency = normal(this.mean, this.std);
       await metronome.wait(latency);

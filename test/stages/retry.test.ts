@@ -19,7 +19,7 @@ describe('Retry', () => {
   })
 
   test('does not retry on success', async () => {
-    dependency.replay = [true, true]
+    dependency.createReplays([true, true]);
     retry.attempts = 2;
 
     await retry.accept(new Event("first"));
@@ -27,7 +27,7 @@ describe('Retry', () => {
     expect(replayWorkSpy).toHaveBeenCalledTimes(1);
   })
   test('retries on fail', async () => {
-    dependency.replay = [false, true]
+    dependency.createReplays([false, true]);
     retry.attempts = 2;
 
     await retry.accept(new Event("first"));
@@ -35,7 +35,7 @@ describe('Retry', () => {
     expect(replayWorkSpy).toHaveBeenCalledTimes(2);
   })
   test('does not retry more than count', async () => {
-    dependency.replay = [false, false, false]
+    dependency.createReplays([false, false, false]);
     retry.attempts = 2;
 
     await retry.accept(new Event("first")).catch(e => "fail");
@@ -43,20 +43,37 @@ describe('Retry', () => {
     expect(replayWorkSpy).toHaveBeenCalledTimes(2);
   })
   test('returns the latest attempt\'s result', async () => {
-    dependency.replay = [false, false, true]
+    dependency.createReplays([false, false, true]);
     retry.attempts = 3;
 
     const res = await retry.accept(new Event("first"));
 
-    expect(res).toBe("success")
+    expect(res).toBeUndefined
   })
   test('fails if all attempts fail', async () => {
-    dependency.replay = [false, false, false, false]
+    dependency.createReplays([false, false, false, false]);
     retry.attempts = 2;
 
     const res = await retry.accept(new Event("first")).catch(e => "fail");
 
     expect(res).toBe("fail")
   })
+
+  test('preserves the wrapped stage\'s success payload', async () => {
+    dependency.createReplays([true], "custom-success");
+
+    const res = await retry.accept(new Event("first"));
+
+    expect(res).toBe("custom-success");
+  })
+
+  test('does not preserves the wrapped stage\'s fail payload', async () => {
+    dependency.createReplays([false, false, false], "custom-success", "custom-fail");
+
+    const res = await retry.accept(new Event("first")).catch(e => e);
+
+    expect(res).toBe("fail"); // intentionally "fail", not "custom-fail", because the retry is failing
+  })
+
 })
 

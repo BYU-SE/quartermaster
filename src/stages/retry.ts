@@ -1,5 +1,6 @@
 import { WrappedStage } from "./wrapped-stage";
 import { Event } from "../";
+import { ResponsePayload } from "../response";
 
 
 /**
@@ -14,12 +15,12 @@ export class Retry extends WrappedStage {
    * @defaultvalue 2
    */
   public attempts: number = 2;
-  async workOn(event: Event): Promise<void> {
+  async workOn(event: Event): Promise<ResponsePayload> {
     let attempt: number = 1;
     while (attempt <= this.attempts) {
       try {
-        await this.wrapped.accept(event);
-        return;
+        const payload = await this.wrapped.accept(event);
+        return payload;
       }
       catch {
         attempt++;

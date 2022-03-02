@@ -1,4 +1,4 @@
-import { Stage, Event, Response, metronome, standardDeviation } from "."
+import { Stage, Event, metronome, standardDeviation, Response, getResponse } from "."
 import { normal } from "./util";
 import { stats } from "./stats";
 
@@ -43,15 +43,15 @@ class Simulation {
   async run(stage: Stage, numEventsToSend: number): Promise<Event[]> {
     return await this.runForNumEvents(stage, numEventsToSend);
   }
-/**
- * Execute a simulation
- * 
- * TODO: Move to own class, so we can set properties on this later, such as changing rates mid-simulation,
- * setting the keyspace, etc.
- * 
- * @param stage The stage where events will be inserted
- * @param numEventsToSend The number of events to be sent
- */
+  /**
+   * Execute a simulation
+   * 
+   * TODO: Move to own class, so we can set properties on this later, such as changing rates mid-simulation,
+   * setting the keyspace, etc.
+   * 
+   * @param stage The stage where events will be inserted
+   * @param numEventsToSend The number of events to be sent
+   */
   async runForNumEvents(stage: Stage, numEventsToSend: number): Promise<Event[]> {
     if (this._running) {
       throw "another simulation is already running";
@@ -220,12 +220,12 @@ class Simulation {
     const time = event.responseTime;
     time.startTime = metronome.now();
 
-    return stage.accept(event).then(response => {
-      event.response = response as Response;
+    return stage.accept(event).then(successPayload => {
+      event.response = getResponse("success", successPayload);
       time.endTime = metronome.now();
       return event;
-    }).catch(error => {
-      event.response = error as Response;
+    }).catch(errorPayload => {
+      event.response = getResponse("fail", errorPayload);
       time.endTime = metronome.now();
       return event
     });
@@ -273,7 +273,7 @@ export function eventSummary(events: Event[], additionalColumns?: EventSummaryCo
 
 export type EventSummary = SummaryResponseData[];
 export type SummaryResponseData = {
-  type: Response | "in-flight"
+  type: ResponseType | "in-flight"
   count: number;
   percent: string;
   mean_latency: string;
@@ -290,12 +290,12 @@ function createEventSummary(events: Event[], additionalColumns?: EventSummaryCol
   const inFlight: Event[] = [];
 
   events.forEach(e => {
-    if (e.response == "fail") {
+    if (e.response?.responseType == "fail") {
       fail.push(e);
     } else if (e.response == null) {
       inFlight.push(e);
     }
-     else {
+    else {
       success.push(e);
     }
   })
@@ -309,8 +309,8 @@ function createEventSummary(events: Event[], additionalColumns?: EventSummaryCol
   const names = ["count", "percent", "mean_latency", "std_latency", ...others.map(x => x.name)]
   const columns = [count, percent, mean_latency, std_latency, ...others.map(x => x.func)];
 
-  const successRow: any = { type: "success" as Response };
-  const failRow: any = { type: "fail" as Response };
+  const successRow: any = { type: "success" as ResponseType };
+  const failRow: any = { type: "fail" as ResponseType };
   const inFlightRow: any = { type: "in-flight" };
 
   const precision = 3;
@@ -318,17 +318,17 @@ function createEventSummary(events: Event[], additionalColumns?: EventSummaryCol
     const propName = names[i] || `Column ${i}`
 
     let successResult = col(success);
-    if(typeof successResult === "number" && successResult % 1 != 0) // not a whole number
+    if (typeof successResult === "number" && successResult % 1 != 0) // not a whole number
       successResult = successResult.toFixed(precision);
     successRow[propName] = successResult;
 
     let failResult = col(fail);
-    if(typeof failResult === "number" && failResult % 1 != 0) // not a whole number
+    if (typeof failResult === "number" && failResult % 1 != 0) // not a whole number
       failResult = failResult.toFixed(precision);
     failRow[propName] = failResult;
 
     let inFlightResult = col(inFlight);
-    if(typeof inFlightResult === "number" && inFlightResult % 1 != 0) // not a whole number
+    if (typeof inFlightResult === "number" && inFlightResult % 1 != 0) // not a whole number
       inFlightResult = inFlightResult.toFixed(precision);
     inFlightRow[propName] = inFlightResult;
   })
@@ -409,14 +409,14 @@ export function eventCompare(a: Event[], b: Event[]): void {
   const precision = 3;
   const diff: EventSummary = [
     {
-      type: "success" as Response,
+      type: "success" as ResponseType,
       count: bSuccess.count - aSuccess.count,
       percent: (parseFloat(bSuccess.percent) - parseFloat(aSuccess.percent)).toFixed(precision),
       mean_latency: (parseFloat(bSuccess.mean_latency) - parseFloat(aSuccess.mean_latency)).toFixed(precision),
       std_latency: (parseFloat(bSuccess.std_latency) - parseFloat(aSuccess.std_latency)).toFixed(precision),
     },
     {
-      type: "fail" as Response,
+      type: "fail" as ResponseType,
       count: bFail.count - aFail.count,
       percent: (parseFloat(bFail.percent) - parseFloat(aFail.percent)).toFixed(precision),
       mean_latency: (parseFloat(bFail.mean_latency) - parseFloat(aFail.mean_latency)).toFixed(precision),
@@ -427,4 +427,3 @@ export function eventCompare(a: Event[], b: Event[]): void {
   console.log("\nDiff of the events, (B - A):");
   console.table(diff);
 }
-

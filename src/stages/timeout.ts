@@ -1,5 +1,6 @@
 import { WrappedStage } from "./wrapped-stage";
 import { Event, metronome } from "../";
+import { ResponsePayload } from "../response";
 /**
  * Limit the amount of time to wait for a response from the wrapped stage.
  */
@@ -10,10 +11,10 @@ export class Timeout extends WrappedStage {
    * @defaultvalue 300
    */
   public timeout: number = 300;
-  async workOn(event: Event): Promise<void> {
+  async workOn(event: Event): Promise<ResponsePayload> {
     const tookTooLong = metronome.wait(this.timeout).then(() => {
-      throw "fail"
+      throw "timeout"
     });
-    await Promise.race([tookTooLong, this.wrapped.accept(event)]);
+    return Promise.race([tookTooLong, this.wrapped.accept(event)]);
   }
 }
