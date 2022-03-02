@@ -1,5 +1,5 @@
 import { Cache } from "./cache";
-import { Event } from "../";
+import { Event, metronome, ResponsePayload } from "../";
 
 /**
  * A cache that returns the data it has immediately, and has a
@@ -7,13 +7,13 @@ import { Event } from "../";
  */
 export class AsideCache extends Cache {
   protected _cache: any = {};
-  async workOn(event: Event): Promise<void> {
+  async workOn(event: Event): Promise<ResponsePayload> {
     const self = this;
-    this.wrapped.accept(event).then(() => self.set(event.key, "success"));
+    this.wrapped.accept(event).then((payload) => self.set(event.key, { time: metronome.now(), payload }));
 
-    const inCache = !!this.get(event.key);
-    if (!inCache) {
-      throw "fail";
-    }
+    const inCache = this.get(event.key);
+    if(inCache)
+      return inCache.payload;
+    throw "fail";
   }
 }

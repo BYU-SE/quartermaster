@@ -71,4 +71,12 @@ export class LRUCache extends Cache {
       this.remove(keyToRemove)
     }
   }
+
+  /**
+   * Removes all entries from the cache.
+   */
+   public clear(): void {
+     this.order = [];
+     super.clear();
+  }
 }

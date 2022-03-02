@@ -1,5 +1,5 @@
 import { WrappedStage } from "./wrapped-stage";
-import { Event, Response, metronome } from "../";
+import { Event, metronome, ResponsePayload } from "../";
 
 /**
  * The binary circuit breaker has 3 states.
@@ -48,24 +48,21 @@ export class CircuitBreaker extends WrappedStage {
    * @defaultvalue 0
    */
   protected _openTime = 0;
-  async workOn(event: Event): Promise<void> {
-    if (this._state == "open")
-      throw "fail";
-    await this.wrapped.accept(event);
+  async workOn(event: Event): Promise<ResponsePayload> { // do we still need to include this.record() for successes/fails?
+    if (this._state == "open") {
+      this.record(1);
+      throw "circuit-breaker-open";
+    }
+
+    try {
+      const payload = await this.wrapped.accept(event);
+      this.record(0);
+      return payload;
+    } catch (e) {
+      this.record(1);
+      throw e;
+    }
   }
-
-
-  protected success(event: Event): Response {
-    this.record(0);
-    return super.success(event);
-  }
-
-
-  protected fail(event: Event): Response {
-    this.record(1);
-    return super.fail(event);
-  }
-
 
   protected record(status: number): void {
     this._ring.push(status);

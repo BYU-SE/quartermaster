@@ -1,4 +1,4 @@
-import { Stage, Event, metronome } from "../../src";
+import { Stage, Event, metronome, ResponsePayload, Response3, getResponse3 } from "../../src";
 
 
 /**
@@ -13,18 +13,32 @@ export class ReplayDependency extends Stage {
   /**
    * The sequence of success or failure to respond with.
    */
-  public replay: boolean[] = []
+  public replay: Response3[] = []
 
   /**
    * The current index in the replay
    */
   private index: number = -1;
-  async workOn(event: Event): Promise<void> {
+  async workOn(event: Event): Promise<ResponsePayload> {
     await metronome.wait(this.latency);
     this.index++;
-    if (this.replay[this.index])
-      return Promise.resolve();
-    else
-      throw "fail"
+    if (this.replay[this.index].responseType == "success") {
+      return this.replay[this.index].responsePayload;
+    }
+    else {
+      throw this.replay[this.index].responsePayload;
+    }
+  }
+
+  public createReplays(replays: Boolean[], successPayload: string = "success", failPayload: string = "fail"): void {
+    this.index = -1;
+    this.replay = replays.map(element => { 
+      if (element) { 
+        return {responseType: "success", responsePayload: successPayload};
+      }
+      else {
+        return {responseType: "fail", responsePayload: failPayload};
+      }
+    });
   }
 }
