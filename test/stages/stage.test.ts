@@ -1,4 +1,4 @@
-import { Event, Response, metronome, Stage, Response3 } from "../../src";
+import { Event, metronome, Stage } from "../../src";
 
 
 /**

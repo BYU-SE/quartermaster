@@ -1,4 +1,4 @@
-import { Event, Response, metronome, CircuitBreaker, Response3, ResponsePayload } from "../../src";
+import { Event, Response, metronome, CircuitBreaker, ResponsePayload } from "../../src";
 import { ReplayDependency } from "./util";
 
 describe('Circuit-breaker', () => {

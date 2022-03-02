@@ -6,7 +6,7 @@
  *              maintaining functionality of legacy code
  *          -Must be of type string when responseType is "fail", because responsePayload
  *              will be the value to throw
- *   Using Response3 as a return type from the workOn function, additional data can be 
+ *   Using Response as a return type from the workOn function, additional data can be 
  *      provided to the stages that call it
 */
 

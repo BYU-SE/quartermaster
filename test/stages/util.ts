@@ -1,4 +1,4 @@
-import { Stage, Event, metronome, ResponsePayload, Response3, getResponse3 } from "../../src";
+import { Stage, Event, Response, metronome, ResponsePayload } from "../../src";
 
 
 /**
@@ -13,7 +13,7 @@ export class ReplayDependency extends Stage {
   /**
    * The sequence of success or failure to respond with.
    */
-  public replay: Response3[] = []
+  public replay: Response[] = []
 
   /**
    * The current index in the replay
