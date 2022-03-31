@@ -1,4 +1,4 @@
-import { Stage, FIFOServiceQueue, Event, metronome, normal, exponential } from "../../src";
+import { Stage, FIFOServiceQueue, Event, metronome, normal, exponential, SeededMath } from "../../src";
 export class Database extends Stage {
   public concurrent: number = 0;
   public latencyA = 0.06;
@@ -15,20 +15,19 @@ export class Database extends Stage {
 
   async workOn(event: Event): Promise<void> {
     this.concurrent++;
-    const mean =
-      30 + exponential(this.latencyA, this.latencyB, this.concurrent);
+    const mean = 30 + exponential(this.latencyA, this.latencyB, this.concurrent);
     const std = 5 + mean / 500;
     const latency = normal(mean, std);
 
     await metronome.wait(latency);
 
     if (this.concurrent >= this.deadlockThreshold) {
-      if (Math.random() > this.deadlockAvailability) {
+      if (SeededMath.random() > this.deadlockAvailability) {
         this.concurrent--;
         throw "fail";
       }
     } else {
-      if (Math.random() > this.availability) {
+      if (SeededMath.random() > this.availability) {
         this.concurrent--;
         throw "fail";
       }
