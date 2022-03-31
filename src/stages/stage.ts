@@ -44,8 +44,10 @@ export abstract class Stage {
     await this.add(event);
 
     const t = metronome.now();
+    console.log("[stage] Sampling queueWait start time (", t, ") for event", event.id);
     const worker = await this.inQueue.enqueue(event);
     time.queueTime = metronome.now() - t;
+    console.log("[stage] Sampling queueWait end time for event", event.id, "calculated queueTime", time.queueTime );
     this.time.queueTime += time.queueTime;
 
     const beforeWorkTime = metronome.now();

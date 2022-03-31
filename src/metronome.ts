@@ -75,25 +75,34 @@ class Metronome {
   }
 
   async tick(): Promise<void> {
+    console.log("\n\n[metronome] tick()")
     await this.sleep();
+    console.log("[metronome] tick() after this.sleep()")
+    console.log("[metronome] tick() after this.sleep()", this._callbacks.length, "callbacks")
     for (let i = 0; i < this._callbacks.length; i++) {
       const call = this._callbacks[i];
       if (call.tickToExecute == this._currentTick) {
+        console.log("[metronome] tick() after this.sleep()  --> Start call to callback #", i, call.callback.toString())
         await call.callback();
+        console.log("[metronome] tick() after this.sleep()        End call to callback #", i)
         this._callbacks.splice(i, 1);
         i--;
       }
     }
-
+    console.log("[metronome] tick() after this.sleep()", this._callbacks.length, "callbacks remaining after execution")
+    
     this._currentTick++;
-
+    console.log("[metronome] tick() after this.sleep() Updating current tick to ", this._currentTick)
+    
     if (this.speedMode) {
+      console.log("[metronome] tick() Speed Mode enabled, fast forward check");
       // fast forward into next available work
       if (this._callbacks.length > 0) {
         const first = this._callbacks.map(x => x.tickToExecute).sort((a, b) => a - b)[0];
         const delta = first - this._currentTick;
         if (delta > 0) {
           this._currentTick += delta;
+          console.log("[metronome] tick() Speed Mode enabled, fast forwarding", delta, "ticks to", this._currentTick);
         }
       }
     }
