@@ -1,4 +1,4 @@
-import { Stage, Event, metronome, standardDeviation, Response, getResponse } from "."
+import { Stage, Event, ResponseType, metronome, standardDeviation } from "."
 import { normal } from "./util";
 import { stats } from "./stats";
 
@@ -221,11 +221,17 @@ class Simulation {
     time.startTime = metronome.now();
 
     return stage.accept(event).then(successPayload => {
-      event.response = getResponse("success", successPayload);
+      event.response = {
+        responseType: "success",
+        responsePayload: successPayload
+      }
       time.endTime = metronome.now();
       return event;
     }).catch(errorPayload => {
-      event.response = getResponse("fail", errorPayload);
+      event.response = {
+        responseType: "fail",
+        responsePayload: errorPayload
+      }
       time.endTime = metronome.now();
       return event
     });
@@ -272,8 +278,9 @@ export function eventSummary(events: Event[], additionalColumns?: EventSummaryCo
 
 
 export type EventSummary = SummaryResponseData[];
+export type SummaryEventResponseType = ResponseType | "in-flight"
 export type SummaryResponseData = {
-  type: ResponseType | "in-flight"
+  type: SummaryEventResponseType
   count: number;
   percent: string;
   mean_latency: string;
@@ -309,8 +316,8 @@ function createEventSummary(events: Event[], additionalColumns?: EventSummaryCol
   const names = ["count", "percent", "mean_latency", "std_latency", ...others.map(x => x.name)]
   const columns = [count, percent, mean_latency, std_latency, ...others.map(x => x.func)];
 
-  const successRow: any = { type: "success" as ResponseType };
-  const failRow: any = { type: "fail" as ResponseType };
+  const successRow: any = { type: "success" };
+  const failRow: any = { type: "fail" };
   const inFlightRow: any = { type: "in-flight" };
 
   const precision = 3;
@@ -394,7 +401,11 @@ function createStageSummary(stages: Stage[], additionalColumns: StageSummaryColu
 
 
 
-
+/**
+ * Compare 2 sets of events
+ * @param a 
+ * @param b 
+ */
 export function eventCompare(a: Event[], b: Event[]): void {
   const aSummary = createEventSummary(a);
   const bSummary = createEventSummary(b);
@@ -405,22 +416,32 @@ export function eventCompare(a: Event[], b: Event[]): void {
   const aFail = aSummary[1];
   const bFail = bSummary[1];
 
+  const aInflight = aSummary[2];
+  const bInflight = bSummary[2];
+
 
   const precision = 3;
   const diff: EventSummary = [
     {
-      type: "success" as ResponseType,
+      type: "success" as SummaryEventResponseType,
       count: bSuccess.count - aSuccess.count,
       percent: (parseFloat(bSuccess.percent) - parseFloat(aSuccess.percent)).toFixed(precision),
       mean_latency: (parseFloat(bSuccess.mean_latency) - parseFloat(aSuccess.mean_latency)).toFixed(precision),
       std_latency: (parseFloat(bSuccess.std_latency) - parseFloat(aSuccess.std_latency)).toFixed(precision),
     },
     {
-      type: "fail" as ResponseType,
+      type: "fail" as SummaryEventResponseType,
       count: bFail.count - aFail.count,
       percent: (parseFloat(bFail.percent) - parseFloat(aFail.percent)).toFixed(precision),
       mean_latency: (parseFloat(bFail.mean_latency) - parseFloat(aFail.mean_latency)).toFixed(precision),
       std_latency: (parseFloat(bFail.std_latency) - parseFloat(aFail.std_latency)).toFixed(precision),
+    },
+    {
+      type: "in-flight" as SummaryEventResponseType,
+      count: bInflight.count - aInflight.count,
+      percent: (parseFloat(bInflight.percent) - parseFloat(aInflight.percent)).toFixed(precision),
+      mean_latency: (parseFloat(bInflight.mean_latency) - parseFloat(aInflight.mean_latency)).toFixed(precision),
+      std_latency: (parseFloat(bInflight.std_latency) - parseFloat(aInflight.std_latency)).toFixed(precision),
     }
   ]
 

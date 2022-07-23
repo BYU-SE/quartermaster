@@ -7,7 +7,7 @@
  * incident report.
  * 
  */
-import { Retry, simulation,MathFunctions, SeededMath} from "../../src";
+import { Retry, simulation, MathFunctions, SeededMath } from "../../src";
 import { Database } from "./database"
 import { BuildService } from "./build-service"
 import { summarize } from "./util";

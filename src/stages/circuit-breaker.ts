@@ -18,6 +18,9 @@ type CircuitBreakerState = "closed" | "open" | "half-open"
  */
 
 export class CircuitBreaker extends WrappedStage {
+  protected static readonly SUCCESS: number = 0;
+  protected static readonly FAILURE: number = 1;
+
   /**
    * @defaultvalue 0.3
    */
@@ -48,18 +51,21 @@ export class CircuitBreaker extends WrappedStage {
    * @defaultvalue 0
    */
   protected _openTime = 0;
+
   async workOn(event: Event): Promise<ResponsePayload> { // do we still need to include this.record() for successes/fails?
+    // settle the state - important to be done before any work in case open -> half-open
+    this.settleState();
+
     if (this._state == "open") {
-      this.record(1);
       throw "circuit-breaker-open";
     }
 
     try {
-      const payload = await this.wrapped.accept(event);
-      this.record(0);
+      let payload = await this.wrapped.accept(event);
+      this.record(CircuitBreaker.SUCCESS);
       return payload;
     } catch (e) {
-      this.record(1);
+      this.record(CircuitBreaker.FAILURE);
       throw e;
     }
   }
@@ -69,44 +75,52 @@ export class CircuitBreaker extends WrappedStage {
     if (this._ring.length > this.capacity) {
       this._ring.shift();
     }
-
-    this.decideState();
   }
 
-  // We have 0, 0, 0, 0, 0, 0, 0, 1, 1, 1
-  // avg = 0.3. avg >= threshold ? 
+
+
   /**
-   * A side effect is that after going into the OPEN state, if requests
-   * stop for > TimeInOpenState, it doesn't matter since the ring has
-   * to fill up first
+   * Settles the circuit breaker's state into the correct values - this is necessary
+   * because we want timeInOpenState to be a "live" value. So it can be edited dynamically
+   * without having to stop a metronome timer and restart to a smaller value.
+   * 
+   * The circuit breaker's state is evaluated on each inbound request and also whenever
+   * the getState() and getRing() function are called to ensure consistency.
    */
-  public decideState(): void {
+  protected settleState(): void {
+    // if open, always check if its time to half-open
+    if (this._state == "open") {
+      const diff: number = metronome.now() - this._openTime;
+      if (diff > this.timeInOpenState)
+        this.halfOpen();
+    }
+
+    // for closed and half-open, we want to wait until the ring is full.
     if (this._ring.length >= this.capacity) {
       const sum = this._ring.reduce((a, c) => a + c, 0);
       const avg = sum / this.capacity;
-      switch (this._state) {
-        case "closed":
-          if (avg > this.errorThreshold)
-            this.open();
-          break;
-        case "open":
-          const diff: number = metronome.now() - this._openTime;
-          if (diff > this.timeInOpenState)
-            this.halfOpen();
-          break;
-        case "half-open":
-          if (avg > this.errorThreshold)
-            this.open();
-          else
-            this.close();
-          break;
+
+      if (this._state == "closed") {
+        if (avg > this.errorThreshold)
+          this.open();
+      } else if (this._state == "half-open") {
+        if (avg > this.errorThreshold)
+          this.open();
+        else
+          this.close();
       }
     }
   }
 
+  public observedErrorRate(): number {
+    this.settleState();
+    const sum = this._ring.reduce((a, c) => a + c, 0);
+    return sum / this.capacity;
+  }
+
 
   public open(): void {
-    if (this.state == "open")
+    if (this._state == "open")
       return;
 
     this._state = "open";
@@ -114,24 +128,26 @@ export class CircuitBreaker extends WrappedStage {
     this._openTime = metronome.now();
   }
   protected close(): void {
-    if (this.state == "closed")
+    if (this._state == "closed")
       return;
 
     this._state = "closed";
     this._ring = [];
   }
   protected halfOpen(): void {
-    if (this.state == "half-open")
+    if (this._state == "half-open")
       return;
 
     this._state = "half-open";
     this._ring = []
   }
 
-  get state(): CircuitBreakerState {
+  public getState(): CircuitBreakerState {
+    this.settleState();
     return this._state;
   }
-  get ring(): number[] {
+  public getRing(): number[] {
+    this.settleState();
     return this._ring;
   }
 }

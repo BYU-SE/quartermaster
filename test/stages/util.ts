@@ -1,4 +1,4 @@
-import { Stage, Event, Response, metronome, ResponsePayload } from "../../src";
+import { Stage, Event, metronome, Response, ResponsePayload } from "../../src";
 
 
 /**
@@ -32,12 +32,12 @@ export class ReplayDependency extends Stage {
 
   public createReplays(replays: Boolean[], successPayload: string = "success", failPayload: string = "fail"): void {
     this.index = -1;
-    this.replay = replays.map(element => { 
-      if (element) { 
-        return {responseType: "success", responsePayload: successPayload};
+    this.replay = replays.map(element => {
+      if (element) {
+        return { responseType: "success", responsePayload: successPayload };
       }
       else {
-        return {responseType: "fail", responsePayload: failPayload};
+        return { responseType: "fail", responsePayload: failPayload };
       }
     });
   }

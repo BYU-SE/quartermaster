@@ -35,8 +35,8 @@ async function work() {
   eventSummary(events);
   stageSummary([db, retry, service]);
 
-  const accepted = events.filter(x => x.response === "success")
-  const rejected = events.filter(x => x.response != "success")
+  const accepted = events.filter(x => x.response?.responseType === "success")
+  const rejected = events.filter(x => x.response?.responseType != "success")
 
   const queueTimeCounter = (acc: number, curr: Event) => {
     const stage = curr.stageTimes.find(x => x.stage == 'BuildService');

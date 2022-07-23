@@ -22,10 +22,25 @@ export class Event<CustomProps extends object = {}> {
   }
 
 
+  /**
+   * Quick-access timing information about this event and how long it spent
+   * in each stage.
+   */
+  public readonly stageTimes: TimeStats[] = [];
 
-  public stageTimes: TimeStats[];
-  public response: Response | null;
-  public responseTime: ResponseStats;
+  /**
+   * The response, if any, from some stage to this event.
+   */
+  public response: Response | null = null;
+
+  /**
+   * Quick-access timing information about this event and its response
+   */
+  public readonly responseTime: ResponseStats = new ResponseStats();
+
+  /**
+   * A unique identifer for this event
+   */
   public readonly id: number;
 
   /**
@@ -35,14 +50,10 @@ export class Event<CustomProps extends object = {}> {
    * Typed as any intentionally, so we can new up an empty object when the Event
    * is created
    */
-  private customProperties: any
+  private customProperties: any = {};
 
   constructor(public key: string) {
-    this.stageTimes = [];
-    this.response = null;
-    this.responseTime = new ResponseStats();
     this.id = ++Event.idCounter;
-    this.customProperties = {};
   }
 
   addStageTime(t: TimeStats): void {
