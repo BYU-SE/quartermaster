@@ -3,10 +3,10 @@ import {
   NoServiceQueue,
   TimeStats,
   TrafficStats,
-  metronome
+  metronome,
+  ResponsePayload
 } from "../";
 import { ServiceQueue } from "../queues";
-import { ResponsePayload } from "../response";
 
 /**
  * The primary unit of computation.

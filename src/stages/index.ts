@@ -4,7 +4,6 @@ export * from "./aside-cache";
 export * from "./available-dependency";
 export * from "./cache"
 export * from "./circuit-breaker"
-export * from "./adaptive-circuit-breaker"
 export * from "./lru-cache"
 export * from "./retry"
 export * from "./stage"

@@ -55,6 +55,7 @@ describe('Timeout', () => {
   })
 
   test('creates a timeout payload when the timeout is triggered', async () => {
+    dependency.createReplays([true]);
     dependency.latency = 15;
 
     const res = await timeout.accept(new Event("first")).catch(e => e);
